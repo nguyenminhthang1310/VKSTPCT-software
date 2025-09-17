@@ -77,7 +77,9 @@ export default {
       </div>
       <!-- Hộp thông tin nhỏ góc phải -->
       <div class="user-box">
-        <div class="avatar">{{ initials }}</div>
+        <div class="avatar">
+          <img src="../public/img/avatarKS.jpg" alt="avatar" />
+        </div>
         <div class="info">
           <p class="name">{{ user.name }}</p>
           <p class="id">🎟️ {{ user.id }}</p>
@@ -127,7 +129,7 @@ export default {
 }
 
 /* Avatar tròn */
-.avatar {
+.avatar img {
   width: 40px;
   height: 40px;
   background: white;
