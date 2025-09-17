@@ -3,7 +3,13 @@
     <h2>Đăng nhập để vào thi</h2>
 
     <input v-model="formUser.hoten" type="text" placeholder="Họ và tên" />
-    <input v-model="formUser.donvi" type="text" placeholder="Đơn vị" />
+    <!-- đổi input thành select -->
+    <select v-model="formUser.donvi">
+      <option disabled value="">-- Chọn đơn vị --</option>
+      <option v-for="dv in donviList" :key="dv" :value="dv">
+        {{ dv }}
+      </option>
+    </select>
 
     <!-- thông báo lỗi -->
     <p v-if="error" class="error">{{ error }}</p>
@@ -23,6 +29,32 @@ export default {
         donvi: "",
       },
       error: "", // biến lưu lỗi
+      donviList: [
+        "Văn phòng",
+        "Phòng 1",
+        "Phòng 2",
+        "Phòng 7",
+        "Phòng 8",
+        "Phòng 9",
+        "Phòng 10",
+        "Phòng 11",
+        "Phòng 15",
+        "Phòng Thanh tra",
+        "Khu vực 1",
+        "Khu vực 2",
+        "Khu vực 3",
+        "Khu vực 4",
+        "Khu vực 5",
+        "Khu vực 6",
+        "Khu vực 7",
+        "Khu vực 8",
+        "Khu vực 9",
+        "Khu vực 10",
+        "Khu vực 11",
+        "Khu vực 12",
+        "Khu vực 13",
+        "Khu vực 14",
+      ], // danh sách đơn vị có sẵn
     };
   },
   methods: {
@@ -86,5 +118,14 @@ button:hover {
   color: red;
   font-size: 14px;
   margin: 5px 0;
+}
+.login-box select,
+.login-box input {
+  border: #2ecc71 solid 2px;
+  border-radius: 5%;
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 8px;
 }
 </style>

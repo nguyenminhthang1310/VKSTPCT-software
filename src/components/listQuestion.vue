@@ -31,13 +31,17 @@
     <p>⏰ Thời gian làm: {{ elapsedTime }}</p>
     <p>🎯 Số câu đúng: {{ score }}/{{ questions.length }}</p>
   </div>
+  <LoadingOverlay :show="loading"> </LoadingOverlay>
 </template>
 
 <script>
 import { updateUser } from "@/services/Userservice";
 import { fetchQuestions } from "@/services/Questionservice";
+import LoadingOverlay from "./LoadingOverlay.vue";
+
 export default {
   name: "QuizComponent",
+  emits: ["finished"],
   data() {
     return {
       questions: [],
@@ -47,8 +51,10 @@ export default {
       score: 0,
       startTime: null,
       elapsedTime: "",
+      loading: false,
     };
   },
+  components: { LoadingOverlay },
   props: { timeValue: Number, user: Object },
   computed: {
     currentQuestion() {
@@ -58,11 +64,13 @@ export default {
   methods: {
     async getQuestions() {
       try {
+        this.loading = true;
         const res = await fetchQuestions(); // ✅ gọi service
         this.questions = res;
-        console.log(this.questions);
+        this.loading = false;
       } catch (err) {
         console.error("Lỗi khi lấy câu hỏi:", err);
+        this.loading = true;
       }
     },
     selectAnswer(i) {
