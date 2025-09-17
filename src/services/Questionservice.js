@@ -1,5 +1,5 @@
 import axios from "axios";
-const API_URL = "http://localhost:3000/questions"; // đổi theo backend của bạn
+const API_URL = "https://vkstpct-databasequestion.onrender.com/questions"; // đổi theo backend của bạn
 
 // Hàm lấy bộ câu hỏi
 export async function fetchQuestions() {
