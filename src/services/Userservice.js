@@ -1,5 +1,5 @@
 import axios from "axios";
-const API_URL = "https://vkstpct-databasequestion.onrender.com//users"; // đổi theo backend của bạn
+const API_URL = "https://vkstpct-databasequestion.onrender.com/users"; // đổi theo backend của bạn
 
 // Hàm update user
 export const updateUser = async (id, data) => {
