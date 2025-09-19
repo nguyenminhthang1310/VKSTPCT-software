@@ -1,5 +1,5 @@
 <template>
-  <div class="quiz-container" v-if="!finished">
+  <div class="quiz-container no-copy" v-if="!finished">
     <h2>Câu hỏi {{ currentIndex + 1 }}/{{ questions.length }}</h2>
     <p class="question">{{ currentQuestion?.cauhoi }}</p>
     <div class="options">
@@ -136,6 +136,11 @@ export default {
 </script>
 
 <style scoped>
+.no-copy {
+  user-select: none; /* Không cho chọn text */
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
 .quiz-container {
   text-align: center;
 }
