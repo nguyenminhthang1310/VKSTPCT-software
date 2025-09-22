@@ -39,7 +39,7 @@ export default {
         "Phòng 10",
         "Phòng 11",
         "Phòng 15",
-        "Phòng Thanh tra",
+        "Phòng Thanh tra - Khiếu tố",
         "Khu vực 1",
         "Khu vực 2",
         "Khu vực 3",
