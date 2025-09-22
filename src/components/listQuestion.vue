@@ -130,6 +130,7 @@ export default {
     },
   },
   mounted() {
+    console.log("Token gửi đi:", import.meta.env.VITE_API_TOKEN);
     this.getQuestions();
   },
 };
