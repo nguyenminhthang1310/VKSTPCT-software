@@ -41,7 +41,7 @@ import LoadingOverlay from "./LoadingOverlay.vue";
 
 export default {
   name: "QuizComponent",
-  emits: ["finished"],
+  emits: ["finished", "quiz-ready"],
   data() {
     return {
       questions: [],
@@ -68,6 +68,7 @@ export default {
         const res = await fetchQuestions(); // ✅ gọi service
         this.questions = res;
         this.loading = false;
+        this.$emit("quiz-ready"); // báo cho App
       } catch (err) {
         console.error("Lỗi khi lấy câu hỏi:", err);
         this.loading = true;
@@ -130,7 +131,6 @@ export default {
     },
   },
   mounted() {
-    console.log("Token gửi đi:", import.meta.env.VITE_API_TOKEN);
     this.getQuestions();
   },
 };

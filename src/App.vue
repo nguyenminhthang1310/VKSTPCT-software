@@ -25,6 +25,11 @@ export default {
       this.examStarted = true;
       if (this.$refs.quiz) this.$refs.quiz.startQuiz();
     },
+    startTimer() {
+      if (this.$refs.timer) {
+        this.$refs.timer.start(); // gọi start() trong Timer
+      }
+    },
     autoFinish() {
       if (this.$refs.quiz) this.$refs.quiz.finishQuiz();
     },
@@ -63,6 +68,7 @@ export default {
             @send-time="receiveTimefromtimer"
             @start="startExam"
             @timeup="autoFinish"
+            @quiz-ready="startTimer"
           />
         </div>
         <div class="list-question">
