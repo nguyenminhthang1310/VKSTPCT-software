@@ -1,12 +1,13 @@
 import axios from "axios";
 const API_URL = "https://vkstpct-databasequestion.onrender.com/users"; // đổi theo backend của bạn
+const token = import.meta.env.VITE_API_TOKEN;
 
 // Hàm update user
 export const updateUser = async (id, data) => {
   try {
     const res = await axios.put(`${API_URL}/${id}`, data, {
       headers: {
-        Authorization: `Bearer ${import.meta.env.VITE_API_TOKEN}`,
+        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
     });
@@ -22,7 +23,7 @@ export const createUser = async (data) => {
   try {
     const res = await axios.post(API_URL, data, {
       headers: {
-        Authorization: `Bearer ${import.meta.env.VITE_API_TOKEN}`,
+        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
     });
