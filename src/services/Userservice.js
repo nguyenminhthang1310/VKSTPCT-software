@@ -6,7 +6,7 @@ export const updateUser = async (id, data) => {
   try {
     const res = await axios.put(`${API_URL}/${id}`, data, {
       headers: {
-        Authorization: `Bearer ${process.env.VITE_API_TOKEN}`,
+        Authorization: `Bearer ${import.meta.env.VITE_API_TOKEN}`,
         "Content-Type": "application/json",
       },
     });
@@ -22,7 +22,7 @@ export const createUser = async (data) => {
   try {
     const res = await axios.post(API_URL, data, {
       headers: {
-        Authorization: `Bearer ${process.env.VITE_API_TOKEN}`,
+        Authorization: `Bearer ${import.meta.env.VITE_API_TOKEN}`,
         "Content-Type": "application/json",
       },
     });

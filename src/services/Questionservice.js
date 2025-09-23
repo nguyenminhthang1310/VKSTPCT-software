@@ -6,7 +6,7 @@ export async function fetchQuestions() {
   try {
     const res = await axios.get(API_URL, {
       headers: {
-        Authorization: `Bearer ${process.env.VITE_API_TOKEN}`, // 👈 header thêm ở đây
+        Authorization: `Bearer ${import.meta.env.VITE_API_TOKEN}`, // 👈 header thêm ở đây
         "Content-Type": "application/json", // (nếu cần)
       },
     });
