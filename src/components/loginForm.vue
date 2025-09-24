@@ -14,7 +14,7 @@
     <!-- thông báo lỗi -->
     <p v-if="error" class="error">{{ error }}</p>
 
-    <button @click="submit(), create()">Vào thi</button>
+    <button @click="submit()">Vào thi</button>
   </div>
 </template>
 
@@ -61,7 +61,7 @@ export default {
     async create() {
       try {
         const newUser = await createUser(this.formUser);
-        console.log(newUser);
+        // console.log(newUser);
         localStorage.setItem("currentUserId", JSON.stringify(newUser._id));
       } catch (err) {
         console.log(`Lỗi: ${err.message}`);
@@ -73,6 +73,7 @@ export default {
         return;
       }
       this.error = "";
+      this.create();
       this.$emit("login", {
         name: this.formUser.hoten,
         id: this.formUser.donvi,
