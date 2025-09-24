@@ -32,7 +32,7 @@ export async function createSubmission(payload) {
       },
     });
 
-    console.log("✅ Submission đã lưu:", res.data);
+    // console.log("✅ Submission đã lưu:", res.data);
     return res.data;
   } catch (err) {
     console.error(

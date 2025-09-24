@@ -20,12 +20,12 @@ export default {
 .footer {
   background: linear-gradient(135deg, #6a11cb, #2575fc);
   color: white;
-  padding: 16px;
+  padding: 0px;
   text-align: center;
   position: relative;
   bottom: 0;
   width: 100%;
-  margin-top: 40px;
+  margin-top: 20%;
   border-top-left-radius: 12px;
   border-top-right-radius: 12px;
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);

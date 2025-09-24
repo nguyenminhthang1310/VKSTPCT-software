@@ -3,6 +3,7 @@
     <h2>Đăng nhập để vào thi</h2>
 
     <input v-model="formUser.hoten" type="text" placeholder="Họ và tên" />
+    <input v-model="formUser.phone" type="text" placeholder="Số điện thoại" />
     <!-- đổi input thành select -->
     <select v-model="formUser.donvi">
       <option disabled value="">-- Chọn đơn vị --</option>
@@ -27,6 +28,7 @@ export default {
       formUser: {
         hoten: "",
         donvi: "",
+        phone: "",
       },
       error: "", // biến lưu lỗi
       donviList: [
@@ -61,7 +63,7 @@ export default {
     async create() {
       try {
         const newUser = await createUser(this.formUser);
-        // console.log(newUser);
+        console.log(newUser);
         localStorage.setItem("currentUserId", JSON.stringify(newUser._id));
       } catch (err) {
         console.log(`Lỗi: ${err.message}`);
