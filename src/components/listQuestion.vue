@@ -74,10 +74,9 @@ export default {
         this.questions = res;
         // console.log("📥 Questions loaded:", this.questions);
         this.$emit("quiz-ready");
+        this.loading = false;
       } catch (err) {
         console.error("❌ Lỗi khi lấy câu hỏi:", err);
-      } finally {
-        this.loading = false;
       }
     },
 
