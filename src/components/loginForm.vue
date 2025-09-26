@@ -69,7 +69,11 @@ export default {
       }
     },
     submit() {
-      if (!this.formUser.hoten || !this.formUser.donvi) {
+      if (
+        !this.formUser.hoten ||
+        !this.formUser.donvi ||
+        !this.formUser.phone
+      ) {
         this.error = "⚠️ Vui lòng nhập đầy đủ thông tin trước khi vào thi!";
         return;
       }
