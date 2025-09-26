@@ -1,5 +1,5 @@
 <template>
-  <div class="quiz-container no-copy" v-if="!finished">
+  <div class="quiz-container no-copy" v-if="!finished && questions.length">
     <h2>Câu hỏi {{ currentIndex + 1 }}/{{ questions.length }}</h2>
     <p class="question">{{ currentQuestion?.cauhoi }}</p>
 
@@ -28,13 +28,12 @@
     </div>
   </div>
 
-  <div v-else class="result">
+  <div v-else-if="finished" class="result">
     <h2>Kết quả bài thi</h2>
     <p>⏰ Thời gian làm: {{ elapsedTime }}</p>
     <p>🎯 Số câu đúng: {{ score }}/{{ questions.length }}</p>
   </div>
-
-  <LoadingOverlay :show="loading" />
+  <LoadingOverlay :show="isloading"></LoadingOverlay>
 </template>
 
 <script>
@@ -42,81 +41,105 @@ import { updateUser } from "@/services/Userservice";
 import { fetchQuestions } from "@/services/Questionservice";
 import { createSubmission } from "@/services/Submissionservice";
 import LoadingOverlay from "./LoadingOverlay.vue";
-
 export default {
   name: "QuizComponent",
-  emits: ["finished", "quiz-ready"],
-  data() {
-    return {
-      questions: [],
-      currentIndex: 0,
-      answers: [], // lưu index đáp án mà user chọn
-      finished: false,
-      score: 0,
-      startTime: null,
-      elapsedTime: "",
-      loading: false,
-    };
+  props: {
+    timeValue: Number,
+    user: Object,
   },
   components: { LoadingOverlay },
-  props: { timeValue: Number, user: Object },
+  emits: ["quiz-ready", "finished"],
+  data() {
+    return {
+      isloading: false,
+      questions: [],
+      currentIndex: 0,
+      answers: [],
+      finished: false,
+      score: 0,
+      elapsedTime: "",
+    };
+  },
   computed: {
     currentQuestion() {
       return this.questions[this.currentIndex];
     },
   },
   methods: {
-    // 🔹 Lấy danh sách câu hỏi
+    // 🔹 Gọi từ bên ngoài khi user nhấn "Bắt đầu làm bài"
     async getQuestions() {
       try {
-        this.loading = true;
+        this.isloading = true;
         const res = await fetchQuestions();
         this.questions = res;
-        // console.log("📥 Questions loaded:", this.questions);
+        this.answers = new Array(this.questions.length).fill(null);
         this.$emit("quiz-ready");
-        this.loading = false;
+        this.isloading = false;
       } catch (err) {
+        this.isloading = true;
         console.error("❌ Lỗi khi lấy câu hỏi:", err);
       }
     },
 
-    // 🔹 Chọn đáp án
     selectAnswer(i) {
       this.answers[this.currentIndex] = i;
-      // console.log(`👉 Câu ${this.currentIndex + 1} chọn đáp án:`, i);
     },
 
     nextQuestion() {
       if (this.currentIndex < this.questions.length - 1) this.currentIndex++;
     },
+
     prevQuestion() {
       if (this.currentIndex > 0) this.currentIndex--;
     },
 
-    // 🔹 Cập nhật thông tin User (thoigianlambai, traloidung)
-    async updatedUser(obj) {
+    async finishQuiz() {
+      this.finished = true;
+
+      // Tính điểm
+      this.score = this.answers.filter(
+        (ans, i) => ans === this.questions[i]?.dapan
+      ).length;
+
+      // Format thời gian
+      const totalSeconds = this.timeValue;
+      const hrs = Math.floor(totalSeconds / 3600);
+      const mins = Math.floor((totalSeconds % 3600) / 60);
+      const secs = totalSeconds % 60;
+      this.elapsedTime = `${String(hrs).padStart(2, "0")}:${String(
+        mins
+      ).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+
+      // Gửi dữ liệu về component cha
+      this.$emit("finished", {
+        elapsedTime: this.elapsedTime,
+        score: this.score,
+      });
+
+      // Cập nhật user nếu có userId
+      await this.updateUserInfo();
+      await this.saveSubmission();
+    },
+
+    async updateUserInfo() {
       try {
         const stored = JSON.parse(localStorage.getItem("currentUserId"));
-        if (!stored) {
-          console.error("⚠ Không tìm thấy user_id trong localStorage");
-          return;
-        }
-        // console.log("📤 Cập nhật User:", stored, obj);
-        const updated = await updateUser(stored, obj);
-        // console.log("✅ User updated:", updated);
+        if (!stored) return;
+
+        const obj = {
+          thoigianlambai: this.elapsedTime,
+          traloidung: this.score,
+        };
+        await updateUser(stored, obj);
       } catch (err) {
-        console.error("❌ Lỗi khi cập nhật User:", err);
+        console.error("❌ Lỗi khi cập nhật user:", err);
       }
     },
 
-    // 🔹 Lưu submission chi tiết (ép string cho dapanchon & dapan_dung)
     async saveSubmission() {
       try {
         const stored = JSON.parse(localStorage.getItem("currentUserId"));
-        if (!stored) {
-          console.error("⚠ Không tìm thấy user_id trong localStorage");
-          return;
-        }
+        if (!stored) return;
 
         const submissionAnswers = this.questions.map((q, i) => {
           const userChoiceIndex = this.answers[i];
@@ -133,72 +156,23 @@ export default {
         const payload = {
           user_id: String(stored),
           diem: this.score,
-          thoigianlambai: String(this.elapsedTime),
+          thoigianlambai: this.elapsedTime,
           answers: submissionAnswers,
         };
 
-        // console.log("📤 Payload chuẩn bị gửi Submission:", JSON.stringify(payload, null, 2));
-
-        const res = await createSubmission(payload);
-        // console.log("✅ Submission saved:", res);
+        await createSubmission(payload);
       } catch (err) {
-        console.error("❌ Lỗi lưu Submission:", err);
+        console.error("❌ Lỗi lưu bài:", err);
       }
     },
 
-    // 🔹 Kết thúc bài thi
-    async finishQuiz() {
-      this.finished = true;
-
-      // Tính điểm
-      this.score = this.answers.filter(
-        (ans, i) => ans === this.questions[i].dapan
-      ).length;
-
-      // Format thời gian
-      const totalSeconds = this.timeValue;
-      const hrs = Math.floor(totalSeconds / 3600);
-      const mins = Math.floor((totalSeconds % 3600) / 60);
-      const secs = totalSeconds % 60;
-      this.elapsedTime = `${String(hrs).padStart(2, "0")}:${String(
-        mins
-      ).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-
-      // console.log("🎯 Kết quả:", {
-      //   score: this.score,
-      //   elapsedTime: this.elapsedTime,
-      //   rawTime: this.timeValue,
-      // });
-
-      // Báo kết quả lên App cha
-      this.$emit("finished", {
-        elapsedTime: this.timeValue,
-        score: this.score,
-        time: this.timeValue,
-      });
-
-      // Cập nhật User
-      const objFinish = {
-        thoigianlambai: this.elapsedTime,
-        traloidung: this.score,
-      };
-      this.updatedUser(objFinish);
-
-      // Lưu Submission chi tiết
-      await this.saveSubmission();
-    },
-
-    // 🔹 Reset quiz
+    // 🔹 Reset khi bắt đầu lại
     startQuiz() {
       this.finished = false;
-      this.answers = [];
+      this.answers = new Array(this.questions.length).fill(null);
       this.currentIndex = 0;
       this.score = 0;
-      this.startTime = Date.now();
     },
-  },
-  mounted() {
-    this.getQuestions();
   },
 };
 </script>

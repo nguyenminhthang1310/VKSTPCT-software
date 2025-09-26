@@ -4,47 +4,68 @@ import Timer from "./components/timer.vue";
 import ListQuestion from "./components/listQuestion.vue";
 import Footer from "./components/footer.vue";
 import LoginForm from "./components/loginForm.vue";
+
 export default {
   name: "ExamApp",
   components: { Header, Timer, ListQuestion, LoginForm, Footer },
   data() {
-    return { examStarted: false, timed: 0, user: null };
-  },
-  computed: {
-    initials() {
-      if (!this.user) return "";
-      return this.user.name
-        .split(" ")
-        .map((n) => n[0].toUpperCase())
-        .join("")
-        .slice(1, 2); // Lấy 2 ký tự đầu
-    },
+    return {
+      examStarted: false,
+      timed: 0, // Thời gian đã làm bài
+      user: null,
+      questionsLoaded: false,
+    };
   },
   methods: {
-    startExam() {
+    // Khi user nhấn nút "Bắt đầu làm bài"
+    async startExam() {
       this.examStarted = true;
-      if (this.$refs.quiz) this.$refs.quiz.startQuiz();
+      this.questionsLoaded = false;
+
+      this.$nextTick(async () => {
+        if (this.$refs.quiz) {
+          await this.$refs.quiz.getQuestions();
+        }
+      });
     },
+    // Khi câu hỏi đã load xong từ QuizComponent
     startTimer() {
+      this.questionsLoaded = true;
+
+      if (this.$refs.quiz) {
+        this.$refs.quiz.startQuiz(); // reset lại trạng thái quiz
+      }
+
       if (this.$refs.timer) {
-        this.$refs.timer.start(); // gọi start() trong Timer
+        this.$refs.timer.start(); // Bắt đầu tính giờ
       }
     },
-    autoFinish() {
-      if (this.$refs.quiz) this.$refs.quiz.finishQuiz();
-    },
-    handleQuizFinished(payload) {
-      // dừng timer
-      if (this.$refs.timer) this.$refs.timer.stop();
-      console.log("Kết quả:", payload);
-      console.log(this.timed);
-    },
-    // nhận thời gian từ component con
+
+    // Nhận thời gian làm bài từ Timer (mỗi giây)
     receiveTimefromtimer(time) {
       this.timed = time;
     },
-    onLogin(u) {
-      this.user = u;
+
+    // Khi hết giờ thì tự nộp bài
+    autoFinish() {
+      if (this.$refs.quiz) {
+        this.$refs.quiz.finishQuiz();
+      }
+    },
+
+    // Khi người dùng hoàn thành bài thi (thủ công hoặc tự động)
+    handleQuizFinished(payload) {
+      if (this.$refs.timer) {
+        this.$refs.timer.stop(); // Dừng đồng hồ
+      }
+
+      console.log("🎯 Kết quả bài thi:", payload);
+      console.log("⏱️ Thời gian làm bài (giây):", this.timed);
+    },
+
+    // Khi đăng nhập xong
+    onLogin(user) {
+      this.user = user;
     },
   },
 };
@@ -52,15 +73,22 @@ export default {
 
 <template>
   <div class="main">
+    <!-- HEADER -->
     <div class="header-VKS">
-      <Header></Header>
+      <Header />
     </div>
+
+    <!-- LOGIN FORM -->
     <LoginForm v-if="!user" @login="onLogin" />
+
+    <!-- EXAM INTERFACE -->
     <div v-else class="base-VKS">
       <div class="base-header">
         <h3 class="base-header-text">PHẦN MỀM TRẢ LỜI CÂU HỎI VKS</h3>
       </div>
+
       <div class="base-question">
+        <!-- TIMER -->
         <div class="timer-question">
           <Timer
             ref="timer"
@@ -68,20 +96,23 @@ export default {
             @send-time="receiveTimefromtimer"
             @start="startExam"
             @timeup="autoFinish"
-            @quiz-ready="startTimer"
           />
         </div>
+
+        <!-- QUIZ -->
         <div class="list-question">
-          <listQuestion
+          <ListQuestion
             v-if="examStarted"
             ref="quiz"
-            @finished="handleQuizFinished"
-            :timeValue="timed"
             :user="user"
+            :timeValue="timed"
+            @quiz-ready="startTimer"
+            @finished="handleQuizFinished"
           />
         </div>
       </div>
-      <!-- Hộp thông tin nhỏ góc phải -->
+
+      <!-- USER INFO BOX -->
       <div class="user-box">
         <div class="avatar">
           <img src="../public/img/avatarKS.jpg" alt="avatar" />
@@ -93,8 +124,9 @@ export default {
       </div>
     </div>
 
+    <!-- FOOTER -->
     <div class="footer-VKS">
-      <Footer></Footer>
+      <Footer />
     </div>
   </div>
 </template>
@@ -113,7 +145,8 @@ export default {
 .base-header-text {
   text-align: center;
 }
-/* User box sinh động */
+
+/* User box */
 .user-box {
   position: absolute;
   top: 20px;
@@ -128,27 +161,15 @@ export default {
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-
 .user-box:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
 }
-
-/* Avatar tròn */
 .avatar img {
   width: 40px;
   height: 40px;
-  background: white;
-  color: #2575fc;
-  font-weight: bold;
-  font-size: 16px;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
-
-/* Thông tin */
 .info {
   text-align: left;
 }

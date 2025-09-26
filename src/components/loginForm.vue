@@ -63,7 +63,6 @@ export default {
     async create() {
       try {
         const newUser = await createUser(this.formUser);
-        console.log(newUser);
         localStorage.setItem("currentUserId", JSON.stringify(newUser._id));
       } catch (err) {
         console.log(`Lỗi: ${err.message}`);

@@ -20,7 +20,7 @@
     <div class="buttons">
       <button
         v-show="showStart"
-        @click="start"
+        @click="$emit('start')"
         :disabled="running"
         class="btn btn-green"
       >
@@ -41,7 +41,7 @@
 export default {
   name: "SimpleTimer",
   props: {
-    duration: { type: Number, default: 1800 }, // mặc định 30 phút
+    duration: { type: Number, default: 1800 }, // 30 phút mặc định
   },
   data() {
     return {
@@ -51,7 +51,7 @@ export default {
       running: false,
       showPopup: false,
       timeAnswer: 0,
-      circumference: 2 * Math.PI * 54, // chu vi vòng tròn
+      circumference: 2 * Math.PI * 54,
     };
   },
   computed: {
@@ -62,8 +62,10 @@ export default {
         "0"
       );
       const s = String(this.timeLeft % 60).padStart(2, "0");
+
       this.timeAnswer = this.duration - this.timeLeft;
       this.$emit("send-time", this.timeAnswer);
+
       return `${h}:${m}:${s}`;
     },
     dashOffset() {
@@ -78,7 +80,7 @@ export default {
       this.showStart = false;
       if (this.running) return;
       this.running = true;
-      this.$emit("start");
+
       this.timer = setInterval(() => {
         if (this.timeLeft > 0) {
           this.timeLeft--;
@@ -89,18 +91,16 @@ export default {
         }
       }, 1000);
     },
-    pause() {
-      this.stop();
+    stop() {
+      clearInterval(this.timer);
+      this.timer = null;
+      this.running = false;
     },
     reset() {
       this.stop();
       this.timeLeft = this.duration;
       this.showPopup = false;
-    },
-    stop() {
-      clearInterval(this.timer);
-      this.timer = null;
-      this.running = false;
+      this.showStart = true;
     },
   },
   beforeUnmount() {
@@ -113,8 +113,6 @@ export default {
 .timer {
   text-align: center;
 }
-
-/* Đồng hồ tròn */
 .circle {
   position: relative;
   width: 150px;
@@ -124,7 +122,7 @@ export default {
 svg {
   width: 100%;
   height: 100%;
-  transform: rotate(-90deg); /* cho bắt đầu từ trên */
+  transform: rotate(-90deg);
 }
 circle {
   fill: none;
@@ -147,8 +145,6 @@ circle {
   font-weight: bold;
   font-family: monospace;
 }
-
-/* Nút */
 .buttons {
   display: flex;
   justify-content: center;
@@ -168,14 +164,6 @@ button:hover {
 .btn-green {
   background: #2ecc71;
 }
-.btn-gray {
-  background: #95a5a6;
-}
-.btn-red {
-  background: #e74c3c;
-}
-
-/* Popup */
 .popup {
   margin-top: 10px;
   background: #ffeaa7;
