@@ -94,31 +94,33 @@ export default {
     },
 
     async finishQuiz() {
-      this.finished = true;
+      if (confirm("Bạn có chắn chắn hoàn thành bài thì không ?")) {
+        this.finished = true;
 
-      // Tính điểm
-      this.score = this.answers.filter(
-        (ans, i) => ans === this.questions[i]?.dapan
-      ).length;
+        // Tính điểm
+        this.score = this.answers.filter(
+          (ans, i) => ans === this.questions[i]?.dapan
+        ).length;
 
-      // Format thời gian
-      const totalSeconds = this.timeValue;
-      const hrs = Math.floor(totalSeconds / 3600);
-      const mins = Math.floor((totalSeconds % 3600) / 60);
-      const secs = totalSeconds % 60;
-      this.elapsedTime = `${String(hrs).padStart(2, "0")}:${String(
-        mins
-      ).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+        // Format thời gian
+        const totalSeconds = this.timeValue;
+        const hrs = Math.floor(totalSeconds / 3600);
+        const mins = Math.floor((totalSeconds % 3600) / 60);
+        const secs = totalSeconds % 60;
+        this.elapsedTime = `${String(hrs).padStart(2, "0")}:${String(
+          mins
+        ).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 
-      // Gửi dữ liệu về component cha
-      this.$emit("finished", {
-        elapsedTime: this.elapsedTime,
-        score: this.score,
-      });
+        // Gửi dữ liệu về component cha
+        this.$emit("finished", {
+          elapsedTime: this.elapsedTime,
+          score: this.score,
+        });
 
-      // Cập nhật user nếu có userId
-      await this.updateUserInfo();
-      await this.saveSubmission();
+        // Cập nhật user nếu có userId
+        await this.updateUserInfo();
+        await this.saveSubmission();
+      }
     },
 
     async updateUserInfo() {
