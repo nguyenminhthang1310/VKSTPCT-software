@@ -15,7 +15,7 @@
     <!-- thông báo lỗi -->
     <p v-if="error" class="error">{{ error }}</p>
 
-    <button @click="submit()">Vào thi</button>
+    <!-- <button @click="submit()">Vào thi</button> -->
   </div>
   <LoadingOverlay :show="this.show"></LoadingOverlay>
 </template>
