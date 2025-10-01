@@ -18,6 +18,21 @@ export const updateUser = async (id, data) => {
   }
 };
 
+// 🟢 Lấy toàn bộ user
+export const getAllUsers = async () => {
+  try {
+    const res = await axios.get(API_URL, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return res.data;
+  } catch (error) {
+    console.error("❌ Lỗi getAllUsers:", error);
+    throw error.response?.data || { message: error.message };
+  }
+};
+
 // Hàm tạo user mới
 export const createUser = async (data) => {
   try {

@@ -17,10 +17,13 @@
 
     <button @click="submit()">Vào thi</button>
   </div>
+  <LoadingOverlay :show="this.show"></LoadingOverlay>
 </template>
 
 <script>
 import { createUser } from "@/services/Userservice";
+import { getAllUsers } from "@/services/Userservice";
+import LoadingOverlay from "./LoadingOverlay.vue";
 export default {
   name: "LoginForm",
   data() {
@@ -31,6 +34,8 @@ export default {
         phone: "",
       },
       error: "", // biến lưu lỗi
+      login: false,
+      show: false,
       donviList: [
         "Văn phòng",
         "Phòng 1",
@@ -59,30 +64,51 @@ export default {
       ], // danh sách đơn vị có sẵn
     };
   },
+  components: {
+    LoadingOverlay,
+  },
   methods: {
-    async create() {
+    async submit() {
       try {
+        // 1. Kiểm tra input
+        if (
+          !this.formUser.hoten ||
+          !this.formUser.donvi ||
+          !this.formUser.phone
+        ) {
+          this.error = "⚠️ Vui lòng nhập đầy đủ thông tin trước khi vào thi!";
+          return;
+        }
+
+        // 2. Lấy toàn bộ user
+        const allUsers = await getAllUsers();
+
+        // 3. Lọc user theo hoten + phone
+        const sameUsers = allUsers.filter(
+          (u) =>
+            u.hoten === this.formUser.hoten && u.phone === this.formUser.phone
+        );
+
+        // 4. Kiểm tra số lần đăng nhập
+        if (sameUsers.length >= 3) {
+          this.error = "⚠️ Người dùng đã vượt quá số lần đăng nhập!";
+          return;
+        }
+        this.show = true;
+        // 5. Nếu ok thì tạo mới
         const newUser = await createUser(this.formUser);
         localStorage.setItem("currentUserId", JSON.stringify(newUser._id));
+
+        this.error = "";
+        this.$emit("login", {
+          name: this.formUser.hoten,
+          id: this.formUser.donvi,
+        });
+        this.show = false;
       } catch (err) {
-        console.log(`Lỗi: ${err.message}`);
+        console.log(`❌ Lỗi: ${err.message}`);
+        this.error = "⚠️ Có lỗi khi đăng nhập, vui lòng thử lại!";
       }
-    },
-    submit() {
-      if (
-        !this.formUser.hoten ||
-        !this.formUser.donvi ||
-        !this.formUser.phone
-      ) {
-        this.error = "⚠️ Vui lòng nhập đầy đủ thông tin trước khi vào thi!";
-        return;
-      }
-      this.error = "";
-      this.create();
-      this.$emit("login", {
-        name: this.formUser.hoten,
-        id: this.formUser.donvi,
-      });
     },
   },
 };
