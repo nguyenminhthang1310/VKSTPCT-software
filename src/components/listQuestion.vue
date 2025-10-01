@@ -10,7 +10,7 @@
         :class="['option-btn', { selected: answers[currentIndex] === i }]"
         @click="selectAnswer(i)"
       >
-        {{ opt }}
+        {{ String.fromCharCode(65 + i) }}. {{ opt }}
       </button>
     </div>
 
