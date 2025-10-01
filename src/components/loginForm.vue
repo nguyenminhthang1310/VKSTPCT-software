@@ -1,10 +1,11 @@
 <template>
   <div class="login-box">
-    <h2>Đăng nhập để vào thi</h2>
+    <h4>CHƯA ĐẾN THỜI GIAN THI !</h4>
+    <!-- <h2>Đăng nhập để vào thi</h2> -->
 
-    <input v-model="formUser.hoten" type="text" placeholder="Họ và tên" />
+    <!-- <input v-model="formUser.hoten" type="text" placeholder="Họ và tên" />
     <input v-model="formUser.phone" type="text" placeholder="Số điện thoại" />
-    <!-- đổi input thành select -->
+
     <select v-model="formUser.donvi">
       <option disabled value="">-- Chọn đơn vị --</option>
       <option v-for="dv in donviList" :key="dv" :value="dv">
@@ -12,10 +13,7 @@
       </option>
     </select>
 
-    <!-- thông báo lỗi -->
-    <p v-if="error" class="error">{{ error }}</p>
-
-    <!-- <button @click="submit()">Vào thi</button> -->
+    <p v-if="error" class="error">{{ error }}</p> -->
   </div>
   <LoadingOverlay :show="this.show"></LoadingOverlay>
 </template>
