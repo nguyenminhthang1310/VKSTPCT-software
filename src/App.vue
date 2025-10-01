@@ -183,4 +183,7 @@ export default {
   font-size: 12px;
   opacity: 0.9;
 }
+.footer-VKS {
+  margin-top: 20px;
+}
 </style>

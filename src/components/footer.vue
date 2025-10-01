@@ -25,7 +25,7 @@ export default {
   position: relative;
   bottom: 0;
   width: 100%;
-  margin-top: 20%;
+  margin-top: 10%;
   border-top-left-radius: 12px;
   border-top-right-radius: 12px;
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
@@ -34,8 +34,9 @@ export default {
   left: 0;
 }
 .footer-content p {
-  margin: 4px 0;
-  font-size: 14px;
+  padding: 0;
+  margin: 2px 0;
+  font-size: 11px;
 }
 .footer a {
   color: #ffeb3b;

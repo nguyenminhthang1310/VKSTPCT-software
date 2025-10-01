@@ -186,6 +186,7 @@ export default {
   -ms-user-select: none;
 }
 .quiz-container {
+  margin-bottom: 20px;
   text-align: center;
 }
 .question {
