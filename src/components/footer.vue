@@ -1,51 +1,60 @@
 <template>
-  <footer class="footer">
-    <div class="footer-content">
-      <p>© 2025 Viện Kiểm sát – Phần mềm thi trắc nghiệm</p>
-      <p>
-        🚀 Developed by
-        <span class="brand">Bộ phận Công nghệ thông tin VKSND TP Cần Thơ</span>
-      </p>
-    </div>
-  </footer>
+  <div class="wrapper">
+    <footer class="footer">
+      <div class="footer-content">
+        <!-- <p>
+          <i class="fas fa-balance-scale"></i> © 2025 Viện Kiểm sát – Phần mềm
+          thi trắc nghiệm
+        </p> -->
+        <p>
+          <i class="fas fa-code"></i> 🚀 Developed by
+          <span class="brand"
+            >Bộ phận Công nghệ thông tin VKSND TP Cần Thơ</span
+          >
+        </p>
+        <p>
+          <i class="fas fa-user-shield"></i> 🤝 Liên hệ hổ trợ qua Đ/c Nguyễn
+          Minh Thắng - SĐT:
+          <span class="brand">0939 753 581</span>
+        </p>
+      </div>
+    </footer>
+  </div>
 </template>
 
-<script>
-export default {
-  name: "FooterVKS",
-};
-</script>
-
 <style scoped>
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+.wrapper {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  flex: 1; /* chiếm hết không gian trống */
+}
+
 .footer {
   background: linear-gradient(135deg, #6a11cb, #2575fc);
   color: white;
-  padding: 0px;
   text-align: center;
-  position: relative;
-  bottom: 0;
   width: 100%;
-  margin-top: 10%;
+  padding: 10px 0;
   border-top-left-radius: 12px;
   border-top-right-radius: 12px;
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
-  position: fixed; /* cố định */
-  bottom: 0; /* dính sát dưới */
-  left: 0;
 }
+
 .footer-content p {
-  padding: 0;
-  margin: 2px 0;
-  font-size: 11px;
+  margin: 4px 0;
+  font-size: 16px;
 }
-.footer a {
-  color: #ffeb3b;
-  text-decoration: none;
-  font-weight: bold;
-}
-.footer a:hover {
-  text-decoration: underline;
-}
+
 .brand {
   font-weight: bold;
   color: #ffeb3b;

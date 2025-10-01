@@ -132,6 +132,19 @@ export default {
 </template>
 
 <style scoped>
+.main {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* đảm bảo full chiều cao màn hình */
+}
+
+.base-VKS {
+  flex: 1; /* phần nội dung sẽ chiếm hết khoảng trống còn lại */
+}
+
+.footer-VKS {
+  margin-top: auto; /* đẩy footer xuống cuối */
+} 
 .base-header {
   margin: 12px;
   min-height: 100%;
@@ -182,8 +195,5 @@ export default {
   margin: 0;
   font-size: 12px;
   opacity: 0.9;
-}
-.footer-VKS {
-  margin-top: 20px;
 }
 </style>
