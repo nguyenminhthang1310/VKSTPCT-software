@@ -70,44 +70,37 @@ export default {
   methods: {
     async submit() {
       try {
-        // 1. Kiểm tra input
+        this.show = true;
+
         if (
           !this.formUser.hoten ||
           !this.formUser.donvi ||
           !this.formUser.phone
         ) {
-          this.error = "⚠️ Vui lòng nhập đầy đủ thông tin trước khi vào thi!";
+          this.error = "⚠️ Vui lòng nhập đầy đủ thông tin!";
+          this.show = false;
           return;
         }
 
-        // 2. Lấy toàn bộ user
-        const allUsers = await getAllUsers();
-
-        // 3. Lọc user theo hoten + phone
-        const sameUsers = allUsers.filter(
-          (u) =>
-            u.hoten === this.formUser.hoten && u.phone === this.formUser.phone
-        );
-
-        // 4. Kiểm tra số lần đăng nhập
-        if (sameUsers.length >= 3) {
-          this.error = "⚠️ Người dùng đã vượt quá số lần đăng nhập!";
-          return;
-        }
-        this.show = true;
-        // 5. Nếu ok thì tạo mới
         const newUser = await createUser(this.formUser);
-        localStorage.setItem("currentUserId", JSON.stringify(newUser._id));
 
-        this.error = "";
+        localStorage.setItem("currentUserId", JSON.stringify(newUser._id));
         this.$emit("login", {
           name: this.formUser.hoten,
           id: this.formUser.donvi,
         });
+        this.error = "";
         this.show = false;
       } catch (err) {
-        console.log(`❌ Lỗi: ${err.message}`);
-        this.error = "⚠️ Có lỗi khi đăng nhập, vui lòng thử lại!";
+        this.show = false;
+        console.error("❌ Error submit:", err);
+
+        // Vì createUser throw error.response.data, nên err chính là {error:"..."}
+        if (err.error === "Vuot qua 3 lan") {
+          this.error = "⚠️ Bạn đã vượt quá số lần đăng nhập cho phép!";
+        } else {
+          this.error = err.error || err.message || "⚠️ Có lỗi khi đăng nhập!";
+        }
       }
     },
   },
