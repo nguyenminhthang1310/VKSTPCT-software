@@ -1,7 +1,7 @@
 <template>
   <div class="login-box">
-    <!-- <h4>CHƯA ĐẾN THỜI GIAN THI !</h4> -->
-    <h2>Đăng nhập để vào thi</h2>
+    <h4>CHƯA ĐẾN THỜI GIAN THI !</h4>
+    <!-- <h2>Đăng nhập để vào thi</h2>
 
     <input v-model="formUser.hoten" type="text" placeholder="Họ và tên" />
     <input v-model="formUser.phone" type="text" placeholder="Số điện thoại" />
@@ -15,7 +15,7 @@
 
     <button @click="submit">Vào thi</button>
 
-    <p v-if="error" class="error">{{ error }}</p>
+    <p v-if="error" class="error">{{ error }}</p> -->
   </div>
   <LoadingOverlay :show="this.show"></LoadingOverlay>
 </template>
