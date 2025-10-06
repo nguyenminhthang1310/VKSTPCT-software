@@ -51,6 +51,7 @@ export default {
   emits: ["quiz-ready", "finished"],
   data() {
     return {
+      finished: false, // đặt true khi nộp bài thi
       isloading: false,
       questions: [],
       currentIndex: 0,
@@ -127,7 +128,6 @@ export default {
       try {
         const stored = JSON.parse(localStorage.getItem("currentUserId"));
         if (!stored) return;
-
         const obj = {
           thoigianlambai: this.elapsedTime,
           traloidung: this.score,
@@ -147,7 +147,6 @@ export default {
           const userChoiceIndex = this.answers[i];
           const userChoice =
             userChoiceIndex !== undefined ? q.traloi[userChoiceIndex] : "";
-
           return {
             cauhoi: String(q.cauhoi),
             dapanchon: String(userChoice || ""),
@@ -175,6 +174,40 @@ export default {
       this.currentIndex = 0;
       this.score = 0;
     },
+    handleBeforeUnload(event) {
+      if (!this.finished) {
+        // Tính điểm
+        this.score = this.answers.filter(
+          (ans, i) => ans === this.questions[i]?.dapan
+        ).length;
+
+        // Format thời gian
+        const totalSeconds = this.timeValue;
+        const hrs = Math.floor(totalSeconds / 3600);
+        const mins = Math.floor((totalSeconds % 3600) / 60);
+        const secs = totalSeconds % 60;
+        this.elapsedTime = `${String(hrs).padStart(2, "0")}:${String(
+          mins
+        ).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+
+        const stored = JSON.parse(localStorage.getItem("currentUserId"));
+        const obj = {
+          thoigianlambai: this.elapsedTime + ` RELOAD`,
+          traloidung: this.score,
+        };
+        updateUser(stored, obj);
+        this.saveSubmission();
+        event.preventDefault();
+        // Chrome/Edge/Firefox sẽ chỉ hiện cảnh báo mặc định, không cho custom text
+        event.returnValue = "Cảnh báo bài thi sẽ không được luôn!";
+      }
+    },
+  },
+  mounted() {
+    window.addEventListener("beforeunload", this.handleBeforeUnload);
+  },
+  beforeUnmount() {
+    window.removeEventListener("beforeunload", this.handleBeforeUnload);
   },
 };
 </script>

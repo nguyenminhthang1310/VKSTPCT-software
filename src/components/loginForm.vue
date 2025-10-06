@@ -1,9 +1,9 @@
 <template>
   <div class="login-box">
-    <h4>CHƯA ĐẾN THỜI GIAN THI !</h4>
-    <!-- <h2>Đăng nhập để vào thi</h2> -->
+    <!-- <h4>CHƯA ĐẾN THỜI GIAN THI !</h4> -->
+    <h2>Đăng nhập để vào thi</h2>
 
-    <!-- <input v-model="formUser.hoten" type="text" placeholder="Họ và tên" />
+    <input v-model="formUser.hoten" type="text" placeholder="Họ và tên" />
     <input v-model="formUser.phone" type="text" placeholder="Số điện thoại" />
 
     <select v-model="formUser.donvi">
@@ -13,7 +13,9 @@
       </option>
     </select>
 
-    <p v-if="error" class="error">{{ error }}</p> -->
+    <button @click="submit">Vào thi</button>
+
+    <p v-if="error" class="error">{{ error }}</p>
   </div>
   <LoadingOverlay :show="this.show"></LoadingOverlay>
 </template>
@@ -94,7 +96,7 @@ export default {
         console.error("❌ Error submit:", err);
 
         // Vì createUser throw error.response.data, nên err chính là {error:"..."}
-        if (err.error === "Vuot qua 3 lan") {
+        if (err.error === "Vuot qua 2 lan") {
           this.error = "⚠️ Bạn đã vượt quá số lần đăng nhập cho phép!";
         } else {
           this.error = err.error || err.message || "⚠️ Có lỗi khi đăng nhập!";
