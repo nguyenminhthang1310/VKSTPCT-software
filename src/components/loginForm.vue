@@ -1,5 +1,6 @@
 <template>
-  <div class="login-box">
+  <h2>CHƯA BẮT ĐẦU THI!</h2>
+  <!-- <div class="login-box">
     <h2>Đăng nhập để vào thi</h2>
     <p class="text-tb">
       Vui lòng nhập đầy đủ thông tin và đúng định dạnh họ tên. <br></br> Ví dụ: Nguyễn Minh Thắng
@@ -20,7 +21,7 @@
     <button @click="submit">Vào thi</button>
 
     <p v-if="error" class="error">{{ error }}</p>
-  </div>
+  </div> -->
 
   <LoadingOverlay :show="this.show"></LoadingOverlay>
 </template>
