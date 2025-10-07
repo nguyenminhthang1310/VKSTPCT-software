@@ -32,6 +32,7 @@
     <h2>Kết quả bài thi</h2>
     <p>⏰ Thời gian làm: {{ elapsedTime }}</p>
     <p>🎯 Số câu đúng: {{ score }}/{{ questions.length }}</p>
+    <button class="btn btn-danger" @click="logout">Thoát</button>
   </div>
   <LoadingOverlay :show="isloading"></LoadingOverlay>
 </template>
@@ -67,6 +68,11 @@ export default {
     },
   },
   methods: {
+    logout() {
+      if (confirm("Bạn có chắc chắn muốn thoát không?")) {
+        window.location.reload();
+      }
+    },
     // 🔹 Gọi từ bên ngoài khi user nhấn "Bắt đầu làm bài"
     async getQuestions() {
       try {

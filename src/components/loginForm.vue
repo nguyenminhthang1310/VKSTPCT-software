@@ -1,6 +1,6 @@
 <template>
   <div class="login-box">
-    <!-- <h2>Đăng nhập để vào thi</h2> -->
+    <h2>Đăng nhập để vào thi</h2>
     <p class="text-tb">
       Vui lòng nhập đầy đủ thông tin và đúng định dạnh họ tên. <br></br> Ví dụ: Nguyễn Minh Thắng
     </p>
