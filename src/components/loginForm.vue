@@ -1,7 +1,7 @@
 <template>
   <div class="login-box">
-    <h2>Đăng nhập để vào thi</h2>
-    <!-- <p class="text-tb">
+    <!-- <h2>Đăng nhập để vào thi</h2> -->
+    <p class="text-tb">
       Vui lòng nhập đầy đủ thông tin và đúng định dạnh họ tên. <br></br> Ví dụ: Nguyễn Minh Thắng
     </p>
     <input v-model="formUser.hoten" type="text" placeholder="Họ và tên" />
@@ -19,7 +19,7 @@
     </p>
     <button @click="submit">Vào thi</button>
 
-    <p v-if="error" class="error">{{ error }}</p> -->
+    <p v-if="error" class="error">{{ error }}</p>
   </div>
 
   <LoadingOverlay :show="this.show"></LoadingOverlay>
