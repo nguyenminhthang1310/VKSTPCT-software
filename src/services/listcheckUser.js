@@ -95,6 +95,7 @@ const danhSach = [
   "Cao Thị Thúy",
   "Trần Việt Tuấn",
   "Kiều Thị Kim Hòa",
+  "Kiều Thị Kim hòa",
   "Trịnh Thị Hoa",
   "Tô Nguyễn Mộng Lành",
   "Phan Hoàng Phúc",
