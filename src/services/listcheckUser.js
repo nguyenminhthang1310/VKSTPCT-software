@@ -104,7 +104,7 @@ const danhSach = [
   "Hầu Thị Bích Thủy",
   "Lâm Thăng Bằng",
   "Bùi Kim Trọng",
-  "Tăng Thị Thuý Hằng",
+  "Tăng thị thúy hằng",
   "Bùi Văn Bảo",
   "Nguyễn Thanh Bảo Trân",
   "Nguyễn Ngọc Chúc",
