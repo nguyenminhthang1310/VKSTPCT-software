@@ -46,7 +46,7 @@ const danhSach = [
   "Nguyễn Ngọc Lượm",
   "Bùi Văn Hà",
   "Nguyễn Thị Thanh Hương",
-  "Bùi Thị Thuý Ngà",
+  "Bùi thị thúy ngà",
   "Lâm Dạ Hằng",
   "Nguyễn Thị Thúy Hằng",
   "Hứa Minh Thạnh",
