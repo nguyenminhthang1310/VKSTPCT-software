@@ -1,7 +1,24 @@
 <template>
   <div class="quiz-container no-copy" v-if="!finished && questions.length">
     <h2>Câu hỏi {{ currentIndex + 1 }}/{{ questions.length }}</h2>
-    <p class="question">{{ currentQuestion?.cauhoi }}</p>
+    <p class="question">
+      <template
+        v-for="(part, index) in formatQuestion(currentQuestion?.cauhoi)"
+        :key="index"
+      >
+        <a
+          v-if="part.type === 'link'"
+          :href="part.url"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="question-link"
+        >
+          Tại đây
+        </a>
+
+        <span v-else>{{ part.text }}</span>
+      </template>
+    </p>
 
     <div class="options">
       <button
@@ -13,7 +30,17 @@
         {{ String.fromCharCode(65 + i) }}. {{ opt }}
       </button>
     </div>
-
+    <div v-if="currentIndex < 2" class="tinhhuong">
+      <textarea
+        class="answer-box"
+        :id="'answer-' + currentIndex"
+        :name="'answer-' + currentIndex"
+        rows="8"
+        cols="60"
+        placeholder="Nhập câu trả lời của bạn tại đây..."
+        v-model="traloitinhhuong[currentIndex]"
+      ></textarea>
+    </div>
     <div class="controls">
       <button @click="prevQuestion" :disabled="currentIndex === 0">
         ⬅ Trước
@@ -27,13 +54,14 @@
       <button @click="finishQuiz" class="btn-finish">✅ Hoàn thành</button>
     </div>
   </div>
-
   <div v-else-if="finished" class="result">
     <h2>Kết quả bài thi</h2>
     <p>⏰ Thời gian làm: {{ elapsedTime }}</p>
-    <p>🎯 Số câu đúng: {{ score }}/{{ questions.length }}</p>
+    <p>🎯 Số câu đúng: {{ score }}/{{ questions.length - 2 }}</p>
+    <!-- -1 tình huống -->
     <button class="btn btn-danger" @click="logout">Thoát</button>
   </div>
+
   <LoadingOverlay :show="isloading"></LoadingOverlay>
 </template>
 
@@ -60,6 +88,7 @@ export default {
       finished: false,
       score: 0,
       elapsedTime: "",
+      traloitinhhuong: ["", ""],
     };
   },
   computed: {
@@ -68,6 +97,43 @@ export default {
     },
   },
   methods: {
+    formatQuestion(text) {
+      if (!text) return [];
+
+      const result = [];
+      const regex = /\$link\((.*?)\)/g;
+
+      let lastIndex = 0;
+      let match;
+
+      while ((match = regex.exec(text)) !== null) {
+        // Phần text trước link
+        if (match.index > lastIndex) {
+          result.push({
+            type: "text",
+            text: text.substring(lastIndex, match.index),
+          });
+        }
+
+        // Link
+        result.push({
+          type: "link",
+          url: match[1],
+        });
+
+        lastIndex = regex.lastIndex;
+      }
+
+      // Phần text còn lại
+      if (lastIndex < text.length) {
+        result.push({
+          type: "text",
+          text: text.substring(lastIndex),
+        });
+      }
+
+      return result;
+    },
     logout() {
       if (confirm("Bạn có chắc chắn muốn thoát không?")) {
         window.location.reload();
@@ -77,14 +143,32 @@ export default {
     async getQuestions() {
       try {
         this.isloading = true;
+
         const res = await fetchQuestions();
-        this.questions = res;
+
+        console.log("========== DEBUG ==========");
+        console.log("Dữ liệu nhận được:", res);
+        console.log("Có phải mảng không:", Array.isArray(res));
+        console.log("Số câu nhận được:", res?.length);
+        console.log("===========================");
+
+        this.questions = Array.isArray(res) ? res : res.data;
+
+        console.log("Số câu trong this.questions:", this.questions.length);
+
         this.answers = new Array(this.questions.length).fill(null);
+
+        this.traloitinhhuong = ["", ""];
+
+        this.currentIndex = 0;
+        this.finished = false;
+        this.score = 0;
+
         this.$emit("quiz-ready");
-        this.isloading = false;
       } catch (err) {
-        this.isloading = true;
         console.error("❌ Lỗi khi lấy câu hỏi:", err);
+      } finally {
+        this.isloading = false;
       }
     },
 
@@ -106,7 +190,7 @@ export default {
 
         // Tính điểm
         this.score = this.answers.filter(
-          (ans, i) => ans === this.questions[i]?.dapan
+          (ans, i) => ans === this.questions[i]?.dapan,
         ).length;
 
         // Format thời gian
@@ -115,7 +199,7 @@ export default {
         const mins = Math.floor((totalSeconds % 3600) / 60);
         const secs = totalSeconds % 60;
         this.elapsedTime = `${String(hrs).padStart(2, "0")}:${String(
-          mins
+          mins,
         ).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 
         // Gửi dữ liệu về component cha
@@ -150,9 +234,25 @@ export default {
         if (!stored) return;
 
         const submissionAnswers = this.questions.map((q, i) => {
-          const userChoiceIndex = this.answers[i];
+          const userAnswer = this.answers[i];
+
+          // 2 câu đầu là tình huống "đã xử lý câu hỏi trách nghiệm"
+          const isTinhHuong = i < 2;
+
+          if (isTinhHuong) {
+            return {
+              cauhoi: String(q.cauhoi),
+              dapanchon: this.traloitinhhuong[i],
+              dapan_dung: this.traloitinhhuong[i],
+            };
+          }
+
+          // Câu trắc nghiệm bình thường
           const userChoice =
-            userChoiceIndex !== undefined ? q.traloi[userChoiceIndex] : "";
+            userAnswer !== undefined && userAnswer !== null
+              ? q.traloi[userAnswer]
+              : "";
+
           return {
             cauhoi: String(q.cauhoi),
             dapanchon: String(userChoice || ""),
@@ -162,10 +262,12 @@ export default {
 
         const payload = {
           user_id: String(stored),
-          diem: this.score,
+          diem: this.score, // tình huống
           thoigianlambai: this.elapsedTime,
           answers: submissionAnswers,
         };
+
+        console.log("Payload:", payload);
 
         await createSubmission(payload);
       } catch (err) {
@@ -184,7 +286,7 @@ export default {
       if (!this.finished) {
         // Tính điểm
         this.score = this.answers.filter(
-          (ans, i) => ans === this.questions[i]?.dapan
+          (ans, i) => i >= 2 && ans === this.questions[i]?.dapan,
         ).length;
 
         // Format thời gian
@@ -193,7 +295,7 @@ export default {
         const mins = Math.floor((totalSeconds % 3600) / 60);
         const secs = totalSeconds % 60;
         this.elapsedTime = `${String(hrs).padStart(2, "0")}:${String(
-          mins
+          mins,
         ).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 
         const stored = JSON.parse(localStorage.getItem("currentUserId"));
@@ -281,5 +383,46 @@ export default {
   padding: 20px;
   border: 2px solid #2ecc71;
   border-radius: 10px;
+}
+/* tinh huong */
+.answer-box {
+  width: 100%;
+  min-height: 180px;
+  padding: 16px 18px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #333;
+  background: #fff;
+  border: 1px solid #dcdfe6;
+  border-radius: 12px;
+  outline: none;
+  resize: vertical;
+  box-sizing: border-box;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.answer-box::placeholder {
+  color: #999;
+}
+
+.answer-box:focus {
+  border-color: #409eff;
+  box-shadow: 0 0 0 3px rgba(64, 158, 255, 0.15);
+}
+
+.answer-box:hover {
+  border-color: #b8c4d6;
+}
+/* link */
+.question-link {
+  color: #007bff;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.question-link:hover {
+  color: #0056b3;
 }
 </style>

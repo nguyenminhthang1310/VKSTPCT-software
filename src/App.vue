@@ -104,7 +104,6 @@ export default {
           <ListQuestion
             v-if="examStarted"
             ref="quiz"
-            :user="user"
             :timeValue="timed"
             @quiz-ready="startTimer"
             @finished="handleQuizFinished"
@@ -144,7 +143,7 @@ export default {
 
 .footer-VKS {
   margin-top: auto; /* đẩy footer xuống cuối */
-} 
+}
 .base-header {
   margin: 12px;
   min-height: 100%;
@@ -172,7 +171,9 @@ export default {
   padding: 12px 16px;
   border-radius: 12px;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 .user-box:hover {
   transform: translateY(-2px);
