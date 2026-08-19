@@ -7,15 +7,23 @@
         :key="index"
       >
         <a
-          v-if="part.type === 'link'"
+          v-if="part.type === 'link1'"
           :href="part.url"
           target="_blank"
           rel="noopener noreferrer"
           class="question-link"
         >
-          Tại đây
+          Hệ thống thư điện tử công vụ
         </a>
-
+        <a
+          v-else-if="part.type === 'link2'"
+          :href="part.url"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="question-link"
+        >
+          Hệ thống quản lý văn bản
+        </a>
         <span v-else>{{ part.text }}</span>
       </template>
     </p>
@@ -101,13 +109,15 @@ export default {
       if (!text) return [];
 
       const result = [];
-      const regex = /\$link\((.*?)\)/g;
+
+      // Nhận diện cả $link1(...) và $link2(...)
+      const regex = /\$(link1|link2)\((.*?)\)/g;
 
       let lastIndex = 0;
       let match;
 
       while ((match = regex.exec(text)) !== null) {
-        // Phần text trước link
+        // Text trước link
         if (match.index > lastIndex) {
           result.push({
             type: "text",
@@ -117,14 +127,14 @@ export default {
 
         // Link
         result.push({
-          type: "link",
-          url: match[1],
+          type: match[1], // link1 hoặc link2
+          url: match[2],
         });
 
         lastIndex = regex.lastIndex;
       }
 
-      // Phần text còn lại
+      // Text còn lại
       if (lastIndex < text.length) {
         result.push({
           type: "text",

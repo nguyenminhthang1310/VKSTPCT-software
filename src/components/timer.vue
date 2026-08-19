@@ -41,7 +41,7 @@
 export default {
   name: "SimpleTimer",
   props: {
-    duration: { type: Number, default: 1800 }, // 30 phút mặc định
+    duration: { type: Number, default: 2700 }, // 45 phút mặc định
   },
   data() {
     return {
@@ -59,7 +59,7 @@ export default {
       const h = String(Math.floor(this.timeLeft / 3600)).padStart(2, "0");
       const m = String(Math.floor((this.timeLeft % 3600) / 60)).padStart(
         2,
-        "0"
+        "0",
       );
       const s = String(this.timeLeft % 60).padStart(2, "0");
 

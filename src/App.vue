@@ -92,7 +92,7 @@ export default {
         <div class="timer-question">
           <Timer
             ref="timer"
-            :duration="1200"
+            :duration="2700"
             @send-time="receiveTimefromtimer"
             @start="startExam"
             @timeup="autoFinish"
