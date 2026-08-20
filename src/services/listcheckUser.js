@@ -1,4 +1,7 @@
 const danhSach = [
+  "Nguyễn Phát Tài",
+  "Ngô Đăng Khoa",
+  "Nguyễn Hữu Phương",
   "Bùi Văn Hà",
   "Nguyễn Trung Đang",
   "Nguyễn Minh Thắng",
