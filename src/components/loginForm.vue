@@ -44,6 +44,7 @@ export default {
       error: "",
       show: false,
       donviList: [
+        "Lãnh đạo Viện",
         "Văn phòng",
         "Phòng 1",
         "Phòng 2",
