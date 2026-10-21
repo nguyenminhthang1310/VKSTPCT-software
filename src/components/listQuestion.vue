@@ -6,7 +6,7 @@
         v-for="(part, index) in formatQuestion(currentQuestion?.cauhoi)"
         :key="index"
       >
-        <a
+        <!-- <a
           v-if="part.type === 'link1'"
           :href="part.url"
           target="_blank"
@@ -23,8 +23,9 @@
           class="question-link"
         >
           Hệ thống quản lý văn bản
-        </a>
-        <span v-else>{{ part.text }}</span>
+        </a> -->
+        <!-- <span v-else>{{ part.text }}</span> -->
+        <span>{{ part.text }}</span>
       </template>
     </p>
 
@@ -38,7 +39,7 @@
         {{ String.fromCharCode(65 + i) }}. {{ opt }}
       </button>
     </div>
-    <div v-if="currentIndex < 2" class="tinhhuong">
+    <!-- <div v-if="currentIndex < 2" class="tinhhuong">
       <textarea
         class="answer-box"
         :id="'answer-' + currentIndex"
@@ -48,7 +49,7 @@
         placeholder="Nhập câu trả lời của bạn tại đây..."
         v-model="traloitinhhuong[currentIndex]"
       ></textarea>
-    </div>
+    </div> -->
     <div class="controls">
       <button @click="prevQuestion" :disabled="currentIndex === 0">
         ⬅ Trước
@@ -65,7 +66,7 @@
   <div v-else-if="finished" class="result">
     <h2>Kết quả bài thi</h2>
     <p>⏰ Thời gian làm: {{ elapsedTime }}</p>
-    <p>🎯 Số câu đúng: {{ score }}/{{ questions.length - 2 }}</p>
+    <p>🎯 Số câu đúng: {{ score }}/{{ questions.length }}</p>
     <!-- -1 tình huống -->
     <button class="btn btn-danger" @click="logout">Thoát</button>
   </div>
@@ -247,15 +248,15 @@ export default {
           const userAnswer = this.answers[i];
 
           // 2 câu đầu là tình huống "đã xử lý câu hỏi trách nghiệm"
-          const isTinhHuong = i < 2;
+          // const isTinhHuong = i < 2;
 
-          if (isTinhHuong) {
-            return {
-              cauhoi: String(q.cauhoi),
-              dapanchon: this.traloitinhhuong[i],
-              dapan_dung: this.traloitinhhuong[i],
-            };
-          }
+          // if (isTinhHuong) {
+          //   return {
+          //     cauhoi: String(q.cauhoi),
+          //     dapanchon: this.traloitinhhuong[i],
+          //     dapan_dung: this.traloitinhhuong[i],
+          //   };
+          // }
 
           // Câu trắc nghiệm bình thường
           const userChoice =

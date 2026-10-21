@@ -115,7 +115,6 @@ export default {
       } catch (err) {
         this.show = false;
         console.error("❌ Error submit:", err);
-
         if (err.error === "Vuot qua 2 lan") {
           this.error = "⚠️ Bạn đã vượt quá số lần đăng nhập cho phép!";
         } else {

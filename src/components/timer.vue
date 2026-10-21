@@ -41,7 +41,7 @@
 export default {
   name: "SimpleTimer",
   props: {
-    duration: { type: Number, default: 2700 }, // 45 phút mặc định
+    duration: { type: Number, default: 600 }, // 10 phút mặc định
   },
   data() {
     return {
