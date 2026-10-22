@@ -541,6 +541,8 @@ const danhSach = [
   "Võ Văn Út",
   "Phan Thị Hồng Lan",
   "Nguyễn Văn Tiến",
+  "Võ Thành Hay",
+  "Trầm Minh Khang",
 ];
 
 export default danhSach;
