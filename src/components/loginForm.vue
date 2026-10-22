@@ -119,7 +119,7 @@ export default {
         if (err.error === "Vuot qua 2 lan") {
           this.error = "⚠️ Bạn đã vượt quá số lần đăng nhập cho phép!";
         } else {
-          this.error = err.error || err.message || "⚠️ Có lỗi khi đăng nhập!";
+          this.error = "⚠️ Có lỗi khi đăng nhập!";
         }
       }
     },
