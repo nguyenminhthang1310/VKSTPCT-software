@@ -119,6 +119,8 @@ const danhSach = [
   "Nguyễn Văn Hường",
   "nguyen thi thuy van",
   "Lâm Hoàng Vũ",
+  "huynh quoc hoang",
+  "nguyen thi cam nhung",
   "Triệu Duy Ngọc",
   "Cao Văn Bền",
   "Trần Thị Ngân",
