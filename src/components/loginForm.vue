@@ -97,6 +97,7 @@ export default {
         );
 
         if (!found) {
+          console.log(this.error);
           this.error = "❌ SPAM";
           this.show = false;
           return;
@@ -116,7 +117,7 @@ export default {
       } catch (err) {
         this.show = false;
         console.error("❌ Error submit:", err);
-        if (err.error === "Vuot qua 2 lan") {
+        if (err.error === "Họ tên này đã xuất hiện 2 lần, không thể đăng ký thêm!") {
           this.error = "⚠️ Bạn đã vượt quá số lần đăng nhập cho phép!";
         } else {
           this.error = "⚠️ Có lỗi khi đăng nhập!";

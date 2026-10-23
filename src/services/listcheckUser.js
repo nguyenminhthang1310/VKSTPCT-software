@@ -607,13 +607,11 @@ const danhSach = [
   "Tran Thi Thuy Hang",
   "Cao Thuy Ngoc",
   "Nguyen Thi Thanh Thuy",
-
   // 2️⃣ Nhóm vần 'oa' (Hòa/Hoà, Thoa)
   "Kieu Thi Kim Hoa",
   "Truong Van Hoa",
   "Huynh Thi Kim Thoa",
   "Lam Thi Kim Thoa",
-
   // 3️⃣ Nhóm lỗi gõ phím từ nguồn dữ liệu
   "Truong Thi Thanh Quyen",
   "Do Ngoc Tuyen",
