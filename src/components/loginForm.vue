@@ -1,6 +1,6 @@
 <template>
-  <!-- <h2>CHƯA BẮT ĐẦU THI!</h2> -->
-  <div class="login-box">
+  <h2>HỆ THỐNG BẢO TRÌ</h2>
+  <!-- <div class="login-box">
     <h2>Đăng nhập để vào thi</h2>
     <p class="text-tb">
       Vui lòng nhập đầy đủ thông tin và đúng định dạnh họ tên. <br></br> Ví dụ: Nguyễn Minh Thắng
@@ -23,7 +23,7 @@
     <p v-if="error" class="error">{{ error }}</p>
   </div>
 
-  <LoadingOverlay :show="this.show"></LoadingOverlay>
+  <LoadingOverlay :show="this.show"></LoadingOverlay> -->
 </template>
 
 <script>
@@ -88,17 +88,16 @@ export default {
           this.show = false;
           return;
         }
-
         // 2️⃣ Kiểm tra họ tên có nằm trong danh sách không
         const found = validUsers.find(
           (name) =>
             name.trim().toLowerCase() ===
-            this.formUser.hoten.trim().toLowerCase()
+            this.formUser.hoten.trim().toLowerCase(),
         );
 
         if (!found) {
           console.log(this.error);
-          this.error = "❌ SPAM";
+          this.error = "Vui lòng nhập tên không dấu!";
           this.show = false;
           return;
         }
@@ -117,7 +116,9 @@ export default {
       } catch (err) {
         this.show = false;
         console.error("❌ Error submit:", err);
-        if (err.error === "Họ tên này đã xuất hiện 2 lần, không thể đăng ký thêm!") {
+        if (
+          err.error === "Họ tên này đã xuất hiện 2 lần, không thể đăng ký thêm!"
+        ) {
           this.error = "⚠️ Bạn đã vượt quá số lần đăng nhập cho phép!";
         } else {
           this.error = "⚠️ Có lỗi khi đăng nhập!";
