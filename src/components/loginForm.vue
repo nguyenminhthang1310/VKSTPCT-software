@@ -1,9 +1,9 @@
 <template>
-  <h2>HỆ THỐNG BẢO TRÌ</h2>
-  <!-- <div class="login-box">
+  <div class="login-box">
     <h2>Đăng nhập để vào thi</h2>
     <p class="text-tb">
-      Vui lòng nhập đầy đủ thông tin và đúng định dạnh họ tên. <br></br> Ví dụ: Nguyễn Minh Thắng
+      Vui lòng nhập đầy đủ thông tin và đúng định dạng họ tên. <br />
+      Ví dụ: Nguyễn Minh Thắng
     </p>
     <input v-model="formUser.hoten" type="text" placeholder="Họ và tên" />
     <input v-model="formUser.phone" type="text" placeholder="Số điện thoại" />
@@ -14,22 +14,43 @@
         {{ dv }}
       </option>
     </select>
-<p class="text-tb">
-      * Lưu ý: Mỗi công chức, người lao động chỉ được phép tham gia thi một lần duy nhất.
-      "Điểm số lấy dựa trên kết quả thi lần đầu".
+
+    <p class="text-tb">
+      * Lưu ý: Mỗi công chức, người lao động chỉ được phép tham gia thi một lần
+      duy nhất. "Điểm số lấy dựa trên kết quả thi lần đầu".
     </p>
+
     <button @click="submit">Vào thi</button>
 
     <p v-if="error" class="error">{{ error }}</p>
   </div>
 
-  <LoadingOverlay :show="this.show"></LoadingOverlay> -->
+  <LoadingOverlay :show="show" />
 </template>
 
 <script>
 import { createUser } from "@/services/Userservice";
 import LoadingOverlay from "./LoadingOverlay.vue";
-import validUsers from "@/services/listcheckUser"; // ✅ import danh sách hợp lệ
+import validUsers from "@/services/listcheckUser";
+
+// Hàm chuẩn hóa loại bỏ hoàn toàn dấu tiếng Việt để so sánh
+function normalizeName(str) {
+  if (!str || typeof str !== "string") return "";
+  return str
+    .toLowerCase()
+    .replace(/[àáạảãâầấậẩẫăằắặẳẵ]/g, "a")
+    .replace(/[èéẹẻẽêềếệểễ]/g, "e")
+    .replace(/[ìíịỉĩ]/g, "i")
+    .replace(/[òóọỏõôồốộổỗơờớợởỡ]/g, "o")
+    .replace(/[ùúụủũưừứựửữ]/g, "u")
+    .replace(/[ỳýỵỷỹ]/g, "y")
+    .replace(/[đ]/g, "d")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s]/g, "")
+    .trim()
+    .replace(/\s+/g, " ");
+}
 
 export default {
   name: "LoginForm",
@@ -76,34 +97,37 @@ export default {
     async submit() {
       try {
         this.error = "";
-        this.show = true;
 
         // 1️⃣ Kiểm tra nhập đủ thông tin
         if (
-          !this.formUser.hoten ||
-          !this.formUser.donvi ||
-          !this.formUser.phone
+          !this.formUser.hoten.trim() ||
+          !this.formUser.donvi.trim() ||
+          !this.formUser.phone.trim()
         ) {
           this.error = "⚠️ Vui lòng nhập đầy đủ thông tin!";
-          this.show = false;
           return;
         }
-        // 2️⃣ Kiểm tra họ tên có nằm trong danh sách không
+
+        // 2️⃣ Kiểm tra họ tên có nằm trong danh sách không (khử triệt để lệch dấu úy/uý)
+        const inputNorm = normalizeName(this.formUser.hoten);
         const found = validUsers.find(
-          (name) =>
-            name.trim().toLowerCase() ===
-            this.formUser.hoten.trim().toLowerCase(),
+          (name) => normalizeName(name) === inputNorm,
         );
 
         if (!found) {
-          console.log(this.error);
-          this.error = "Vui lòng nhập tên không dấu!";
-          this.show = false;
+          this.error = "⚠️ Họ và tên chưa có trong danh sách !";
           return;
         }
 
-        // 3️⃣ Nếu hợp lệ -> tiếp tục như cũ
-        const newUser = await createUser(this.formUser);
+        this.show = true;
+
+        // 3️⃣ Gửi thông tin đăng ký lên server
+        const newUser = await createUser({
+          hoten: this.formUser.hoten.trim(),
+          donvi: this.formUser.donvi.trim(),
+          phone: this.formUser.phone.trim(),
+        });
+
         localStorage.setItem("currentUserId", JSON.stringify(newUser._id));
 
         this.$emit("login", {
@@ -116,9 +140,10 @@ export default {
       } catch (err) {
         this.show = false;
         console.error("❌ Error submit:", err);
-        if (
-          err.error === "Họ tên này đã xuất hiện 2 lần, không thể đăng ký thêm!"
-        ) {
+
+        // Bắt lỗi theo response từ backend (hỗ trợ cả axios hoặc fetch)
+        const serverMsg = err.response?.data?.error || err.error || err.message;
+        if (serverMsg && serverMsg.includes("đã xuất hiện 2 lần")) {
           this.error = "⚠️ Bạn đã vượt quá số lần đăng nhập cho phép!";
         } else {
           this.error = "⚠️ Có lỗi khi đăng nhập!";
@@ -150,6 +175,7 @@ select {
   padding: 10px;
   border: 2px solid #2ecc71;
   border-radius: 6px;
+  box-sizing: border-box;
 }
 button {
   width: 100%;
@@ -163,7 +189,7 @@ button {
   cursor: pointer;
 }
 button:hover {
-  background: #e74c3c;
+  background: #27ae60;
 }
 .error {
   color: red;
