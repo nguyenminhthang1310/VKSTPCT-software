@@ -197,8 +197,6 @@ export default {
 
     async finishQuiz() {
       if (confirm("Bạn có chắn chắn hoàn thành bài thì không ?")) {
-        this.finished = true;
-
         // Tính điểm
         this.score = this.answers.filter(
           (ans, i) => ans === this.questions[i]?.dapan,
@@ -218,10 +216,13 @@ export default {
           elapsedTime: this.elapsedTime,
           score: this.score,
         });
-
+        this.isloading = true;
         // Cập nhật user nếu có userId
         await this.updateUserInfo();
         await this.saveSubmission();
+        this.isloading = false;
+
+        this.finished = true;
       }
     },
 
