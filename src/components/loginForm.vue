@@ -48,7 +48,7 @@
       duy nhất. "Điểm số lấy dựa trên kết quả thi lần đầu".
     </p>
 
-    <button class="btn-submit" @click="submit">Vào thi</button>
+    <!-- <button class="btn-submit" @click="submit">Vào thi</button> -->
 
     <p v-if="error" class="error">{{ error }}</p>
   </div>
