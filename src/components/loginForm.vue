@@ -1,7 +1,6 @@
 <template>
   <div class="login-box">
-    <h2>Chưa đến thời gian thi</h2>
-    <!-- <h2>Đăng nhập để vào thi</h2>
+    <h2>Đăng nhập để vào thi</h2>
     <p class="text-tb">
       Vui lòng nhập đầy đủ thông tin và đúng định dạng họ tên. <br />
       Ví dụ: Nguyễn Minh Thắng
@@ -16,14 +15,42 @@
       </option>
     </select>
 
+    <!-- Khối mã xác nhận chỉ gồm số -->
+    <div class="captcha-wrapper">
+      <canvas
+        ref="captchaCanvas"
+        width="110"
+        height="42"
+        class="captcha-canvas"
+      ></canvas>
+      <button
+        type="button"
+        class="btn-refresh"
+        title="Đổi mã khác"
+        @click="generateCaptcha"
+      >
+        ↻
+      </button>
+      <input
+        v-model="inputCaptcha"
+        type="text"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        placeholder="Nhập 4 số"
+        maxlength="4"
+        class="input-captcha"
+        @input="inputCaptcha = inputCaptcha.replace(/\D/g, '')"
+      />
+    </div>
+
     <p class="text-tb">
       * Lưu ý: Mỗi công chức, người lao động chỉ được phép tham gia thi một lần
       duy nhất. "Điểm số lấy dựa trên kết quả thi lần đầu".
     </p>
 
-    <button @click="submit">Vào thi</button>
+    <button class="btn-submit" @click="submit">Vào thi</button>
 
-    <p v-if="error" class="error">{{ error }}</p> -->
+    <p v-if="error" class="error">{{ error }}</p>
   </div>
 
   <LoadingOverlay :show="show" />
@@ -34,7 +61,6 @@ import { createUser } from "@/services/Userservice";
 import LoadingOverlay from "./LoadingOverlay.vue";
 import validUsers from "@/services/listcheckUser";
 
-// Hàm chuẩn hóa loại bỏ hoàn toàn dấu tiếng Việt để so sánh
 function normalizeName(str) {
   if (!str || typeof str !== "string") return "";
   return str
@@ -63,6 +89,8 @@ export default {
         donvi: "",
         phone: "",
       },
+      captchaCode: "",
+      inputCaptcha: "",
       error: "",
       show: false,
       donviList: [
@@ -94,12 +122,61 @@ export default {
       ],
     };
   },
+  mounted() {
+    this.generateCaptcha();
+  },
   methods: {
+    generateCaptcha() {
+      // Sinh 4 chữ số ngẫu nhiên từ 1000 đến 9999
+      const code = Math.floor(1000 + Math.random() * 9000).toString();
+      this.captchaCode = code;
+      this.inputCaptcha = "";
+
+      this.$nextTick(() => {
+        const canvas = this.$refs.captchaCanvas;
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+
+        // Nền canvas
+        ctx.fillStyle = "#f5f6fa";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Nét gạch chống bot đọc ảnh đơn giản
+        for (let i = 0; i < 3; i++) {
+          ctx.strokeStyle = `rgba(0, 0, 0, ${0.15 + Math.random() * 0.15})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(
+            Math.random() * canvas.width,
+            Math.random() * canvas.height,
+          );
+          ctx.lineTo(
+            Math.random() * canvas.width,
+            Math.random() * canvas.height,
+          );
+          ctx.stroke();
+        }
+
+        // Vẽ 4 số lên canvas với màu sắc và góc nghiêng nhẹ
+        ctx.font = "bold 24px monospace";
+        for (let i = 0; i < code.length; i++) {
+          ctx.save();
+          const x = 16 + i * 22;
+          const y = 29;
+          ctx.translate(x, y);
+          ctx.rotate((Math.random() - 0.5) * 0.3);
+          ctx.fillStyle = `hsl(${Math.random() * 360}, 70%, 30%)`;
+          ctx.fillText(code[i], 0, 0);
+          ctx.restore();
+        }
+      });
+    },
+
     async submit() {
       try {
         this.error = "";
 
-        // 1️⃣ Kiểm tra nhập đủ thông tin
+        // 1️⃣ Kiểm tra nhập đủ thông tin cơ bản
         if (
           !this.formUser.hoten.trim() ||
           !this.formUser.donvi.trim() ||
@@ -109,7 +186,19 @@ export default {
           return;
         }
 
-        // 2️⃣ Kiểm tra họ tên có nằm trong danh sách không (khử triệt để lệch dấu úy/uý)
+        // 2️⃣ Kiểm tra mã số xác nhận
+        if (!this.inputCaptcha.trim()) {
+          this.error = "⚠️ Vui lòng nhập mã xác nhận!";
+          return;
+        }
+
+        if (this.inputCaptcha.trim() !== this.captchaCode) {
+          this.error = "⚠️ Mã xác nhận không chính xác!";
+          this.generateCaptcha();
+          return;
+        }
+
+        // 3️⃣ Kiểm tra họ tên có trong danh sách
         const inputNorm = normalizeName(this.formUser.hoten);
         const found = validUsers.find(
           (name) => normalizeName(name) === inputNorm,
@@ -122,7 +211,7 @@ export default {
 
         this.show = true;
 
-        // 3️⃣ Gửi thông tin đăng ký lên server
+        // 4️⃣ Gửi thông tin đăng ký lên server
         const newUser = await createUser({
           hoten: this.formUser.hoten.trim(),
           donvi: this.formUser.donvi.trim(),
@@ -140,9 +229,9 @@ export default {
         this.show = false;
       } catch (err) {
         this.show = false;
+        this.generateCaptcha();
         console.error("❌ Error submit:", err);
 
-        // Bắt lỗi theo response từ backend (hỗ trợ cả axios hoặc fetch)
         const serverMsg = err.response?.data?.error || err.error || err.message;
         if (serverMsg && serverMsg.includes("đã xuất hiện 2 lần")) {
           this.error = "⚠️ Bạn đã vượt quá số lần đăng nhập cho phép!";
@@ -178,7 +267,41 @@ select {
   border-radius: 6px;
   box-sizing: border-box;
 }
-button {
+
+/* Khối Captcha */
+.captcha-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+.captcha-canvas {
+  border: 1px solid #dcdde1;
+  border-radius: 6px;
+  user-select: none;
+}
+.btn-refresh {
+  width: auto;
+  padding: 8px 12px;
+  margin: 0;
+  background: #7f8c8d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+}
+.btn-refresh:hover {
+  background: #95a5a6;
+}
+.input-captcha {
+  margin: 0;
+  letter-spacing: 4px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.btn-submit {
   width: 100%;
   padding: 10px;
   margin-top: 10px;
@@ -189,7 +312,7 @@ button {
   font-weight: bold;
   cursor: pointer;
 }
-button:hover {
+.btn-submit:hover {
   background: #27ae60;
 }
 .error {
