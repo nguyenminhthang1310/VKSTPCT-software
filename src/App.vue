@@ -114,7 +114,7 @@ export default {
       <!-- USER INFO BOX -->
       <div class="user-box">
         <div class="avatar">
-          <img src="../public/img/avatarKS.jpg" alt="avatar" />
+          <img src="../public/img/logoVKS.png" alt="avatar" />
         </div>
         <div class="info">
           <p class="name">{{ user.name }}</p>
