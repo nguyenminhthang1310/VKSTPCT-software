@@ -48,8 +48,8 @@
       duy nhất. "Điểm số lấy dựa trên kết quả thi lần đầu".
     </p>
     <!-- <h2>Chưa đến thời gian thi</h2> -->
-    <button class="btn-submit" @click="submit">Vào thi</button>
-
+    <!-- <button class="btn-submit" @click="submit">Vào thi</button> -->
+    <h2>Hệ thống chưa mở thi!</h2>
     <p v-if="error" class="error">{{ error }}</p>
   </div>
 
