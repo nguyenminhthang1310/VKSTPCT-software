@@ -405,7 +405,7 @@ export default {
 
       if (ans) {
         this.$emit("logout");
-        window.location.reload();
+        this.$router.push("/");
       }
     },
 
