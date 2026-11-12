@@ -398,8 +398,8 @@ export default {
 
       if (ans) {
         this.$emit("logout");
-        window.location.reload();
       }
+      window.location.reload();
     },
 
     async getQuestions() {
