@@ -272,8 +272,7 @@ export default {
 
     async clearClipboard() {
       if (!this.enableAntiCheat || this.finished) return;
-      const warningText =
-        "Hành vi chụp ảnh màn hình bài thi là vi phạm nội quy!";
+      const warningText = "Hành vi chụp ảnh màn hình bài thi là vi phạm nội quy!";
       try {
         await navigator.clipboard.writeText(warningText);
       } catch (err) {
@@ -300,10 +299,10 @@ export default {
         this.getCheatSummary();
 
       this.isloading = true;
-
+      
       // CHỈ GỌI 1 HÀM DUY NHẤT
       const isSavedSuccessfully = await this.saveSubmission();
-
+      
       this.isloading = false;
       this.finished = true;
 
@@ -349,8 +348,7 @@ export default {
       if (!text) return [];
       const result = [];
       const regex = /\$(link1|link2)\((.*?)\)/g;
-      let lastIndex = 0,
-        match;
+      let lastIndex = 0, match;
       while ((match = regex.exec(text)) !== null) {
         if (match.index > lastIndex) {
           result.push({
@@ -369,9 +367,7 @@ export default {
     logout() {
       this.isConfirming = true;
       const ans = confirm("Bạn có chắc chắn muốn thoát không?");
-      setTimeout(() => {
-        this.isConfirming = false;
-      }, 500);
+      setTimeout(() => { this.isConfirming = false; }, 500);
 
       if (ans) {
         this.$emit("logout");
@@ -416,9 +412,7 @@ export default {
     async finishQuiz() {
       this.isConfirming = true;
       const ans = confirm("Bạn có chắc chắn hoàn thành bài thi không?");
-      setTimeout(() => {
-        this.isConfirming = false;
-      }, 500);
+      setTimeout(() => { this.isConfirming = false; }, 500);
 
       if (ans) {
         this.score = this.answers.filter(
@@ -455,7 +449,7 @@ export default {
       if (!payload) {
         const userId = this.getUserId();
         if (!userId) return false;
-
+        
         const submissionAnswers = this.questions.map((q, i) => {
           const userAnswer = this.answers[i];
           const userChoice =
@@ -476,7 +470,7 @@ export default {
           thoigianlambai: this.elapsedTime,
           answers: submissionAnswers,
         };
-
+        
         if (this.enableAntiCheat) {
           payload.solanvipham = this.cheatCount;
         }
@@ -503,7 +497,7 @@ export default {
         try {
           this.isloading = true;
           const payload = JSON.parse(offlineData);
-
+          
           const success = await this.saveSubmission(payload);
           if (success) {
             localStorage.removeItem("offline_submission");
@@ -543,7 +537,7 @@ export default {
               dapan_dung: String(q.traloi[q.dapan] || ""),
             };
           });
-
+          
           const payload = {
             user_id: String(userId),
             diem: this.score,
@@ -558,9 +552,7 @@ export default {
 
           // Vẫn gọi updateUser chỗ reload này để kịp ghi nhận nếu user ép F5 tắt máy luôn
           if (this.enableAntiCheat) {
-            updateUser(String(userId), { solanvipham: this.cheatCount }).catch(
-              () => {},
-            );
+            updateUser(String(userId), { solanvipham: this.cheatCount }).catch(() => {});
           }
 
           if (this.user) {
@@ -586,7 +578,7 @@ export default {
     document.addEventListener("copy", this.preventCopyContext);
     document.addEventListener("cut", this.preventCopyContext);
     document.addEventListener("paste", this.preventCopyContext);
-    document.addEventListener("keyup", this.handleKeyUp);
+    document.addEventListener("keyup", this.handleKeyUp); 
 
     if (!this.isOnline) {
       this.$emit("pause-timer");
@@ -598,17 +590,14 @@ export default {
     window.removeEventListener("online", this.updateOnlineStatus);
     window.removeEventListener("offline", this.updateOnlineStatus);
 
-    document.removeEventListener(
-      "visibilitychange",
-      this.handleVisibilityChange,
-    );
+    document.removeEventListener("visibilitychange", this.handleVisibilityChange);
     window.removeEventListener("blur", this.handleWindowBlur);
     document.removeEventListener("keydown", this.handleKeyboardShortcuts);
     document.removeEventListener("contextmenu", this.preventCopyContext);
     document.removeEventListener("copy", this.preventCopyContext);
     document.removeEventListener("cut", this.preventCopyContext);
     document.removeEventListener("paste", this.preventCopyContext);
-    document.removeEventListener("keyup", this.handleKeyUp);
+    document.removeEventListener("keyup", this.handleKeyUp); 
   },
 };
 </script>
