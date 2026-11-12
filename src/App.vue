@@ -59,8 +59,8 @@ export default {
         this.$refs.timer.stop(); // Dừng đồng hồ
       }
 
-      console.log("🎯 Kết quả bài thi:", payload);
-      console.log("⏱️ Thời gian làm bài (giây):", this.timed);
+      // console.log("🎯 Kết quả bài thi:", payload);
+      // console.log("⏱️ Thời gian làm bài (giây):", this.timed);
     },
 
     // Khi đăng nhập xong
