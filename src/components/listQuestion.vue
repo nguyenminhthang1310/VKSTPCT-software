@@ -398,7 +398,7 @@ export default {
 
       if (ans) {
         this.$emit("logout");
-        this.$router.push("/");
+        window.location.reload();
       }
     },
 
