@@ -129,7 +129,7 @@ export default {
     user: Object,
     enableAntiCheat: {
       type: Boolean,
-      default: true,
+      default: false,
     },
   },
   components: { LoadingOverlay },
