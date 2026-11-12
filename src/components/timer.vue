@@ -20,13 +20,20 @@
     <div class="buttons">
       <button
         v-show="showStart"
-        @click="$emit('start')"
+        @click="startBtnClicked"
         :disabled="running"
         class="btn btn-green"
       >
         ▶ Bắt đầu làm bài
       </button>
     </div>
+
+    <!-- Popup mất mạng -->
+    <transition name="fade">
+      <div v-if="isOffline" class="popup offline-popup">
+        <p>⚠️ Mất kết nối! Đã tạm dừng thời gian.</p>
+      </div>
+    </transition>
 
     <!-- Popup hết giờ -->
     <transition name="fade">
@@ -41,7 +48,7 @@
 export default {
   name: "SimpleTimer",
   props: {
-    duration: { type: Number, default: 1200 }, // 10 phút mặc định
+    duration: { type: Number, default: 1200 }, // 20 phút mặc định
   },
   data() {
     return {
@@ -52,6 +59,8 @@ export default {
       showPopup: false,
       timeAnswer: 0,
       circumference: 2 * Math.PI * 54,
+      isOffline: !navigator.onLine, // Kiểm tra trạng thái mạng lúc khởi tạo
+      wasRunningBeforeOffline: false, // Lưu trạng thái trước khi mất mạng
     };
   },
   computed: {
@@ -75,9 +84,22 @@ export default {
       );
     },
   },
+  mounted() {
+    // Lắng nghe sự kiện thay đổi trạng thái mạng
+    window.addEventListener("offline", this.handleOffline);
+    window.addEventListener("online", this.handleOnline);
+  },
   methods: {
-    start() {
+    startBtnClicked() {
+      if (this.isOffline) {
+        alert("Vui lòng kiểm tra kết nối mạng trước khi bắt đầu!");
+        return;
+      }
       this.showStart = false;
+      this.$emit("start");
+      this.start();
+    },
+    start() {
       if (this.running) return;
       this.running = true;
 
@@ -101,10 +123,29 @@ export default {
       this.timeLeft = this.duration;
       this.showPopup = false;
       this.showStart = true;
+      this.isOffline = !navigator.onLine;
+      this.wasRunningBeforeOffline = false;
+    },
+    handleOffline() {
+      this.isOffline = true;
+      if (this.running) {
+        this.wasRunningBeforeOffline = true;
+        this.stop(); // Tạm dừng timer
+      }
+    },
+    handleOnline() {
+      this.isOffline = false;
+      if (this.wasRunningBeforeOffline) {
+        this.start(); // Tiếp tục timer
+        this.wasRunningBeforeOffline = false;
+      }
     },
   },
   beforeUnmount() {
     this.stop();
+    // Xoá listener để tránh leak memory
+    window.removeEventListener("offline", this.handleOffline);
+    window.removeEventListener("online", this.handleOnline);
   },
 };
 </script>
@@ -161,6 +202,10 @@ button {
 button:hover {
   background: #e74c3c;
 }
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 .btn-green {
   background: #2ecc71;
 }
@@ -170,6 +215,10 @@ button:hover {
   padding: 10px;
   border-radius: 8px;
   font-weight: bold;
+}
+.offline-popup {
+  background: #ff7675;
+  color: white;
 }
 .fade-enter-active,
 .fade-leave-active {
