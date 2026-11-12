@@ -169,7 +169,6 @@ export default {
       return ` (Gian lận ${this.cheatCount} lần: ${uniqueReasons.join(" | ")})`;
     },
 
-    // Lưu realtime số lần vi phạm để đề phòng tải lại trang
     async saveCheatCountToDB() {
       const userId = this.getUserId();
       if (!userId || !this.enableAntiCheat) return;
@@ -255,7 +254,6 @@ export default {
 
     handleKeyUp(e) {
       if (!this.enableAntiCheat || this.finished || this.isConfirming) return;
-
       if (e.key === "PrintScreen" || e.keyCode === 44) {
         e.preventDefault();
         this.triggerCheatAction(
@@ -272,7 +270,8 @@ export default {
 
     async clearClipboard() {
       if (!this.enableAntiCheat || this.finished) return;
-      const warningText = "Hành vi chụp ảnh màn hình bài thi là vi phạm nội quy!";
+      const warningText =
+        "Hành vi chụp ảnh màn hình bài thi là vi phạm nội quy!";
       try {
         await navigator.clipboard.writeText(warningText);
       } catch (err) {
@@ -286,6 +285,28 @@ export default {
     },
 
     /* ==== ⚙️ LOGIC CHÍNH BÀI THI & ĐỒNG BỘ MẠNG ⚙️ ==== */
+
+    // HÀM MỚI: Gọi PUT API cập nhật user
+    async updateUserInfo() {
+      const userId = this.getUserId();
+      if (!userId) return;
+
+      const obj = {
+        thoigianlambai: this.elapsedTime,
+        traloidung: this.score,
+      };
+
+      if (this.enableAntiCheat) {
+        obj.solanvipham = this.cheatCount;
+      }
+
+      try {
+        await updateUser(String(userId), obj);
+      } catch (e) {
+        console.error("Lỗi cập nhật User Info:", e);
+      }
+    },
+
     async forceSubmitQuiz() {
       this.forceSubmitted = true;
       this.showCheatWarning = false;
@@ -299,10 +320,13 @@ export default {
         this.getCheatSummary();
 
       this.isloading = true;
-      
-      // CHỈ GỌI 1 HÀM DUY NHẤT
+
+      // 1. Cập nhật User (Điểm số)
+      await this.updateUserInfo();
+
+      // 2. Lưu Submission (Đáp án chi tiết)
       const isSavedSuccessfully = await this.saveSubmission();
-      
+
       this.isloading = false;
       this.finished = true;
 
@@ -348,7 +372,8 @@ export default {
       if (!text) return [];
       const result = [];
       const regex = /\$(link1|link2)\((.*?)\)/g;
-      let lastIndex = 0, match;
+      let lastIndex = 0,
+        match;
       while ((match = regex.exec(text)) !== null) {
         if (match.index > lastIndex) {
           result.push({
@@ -367,7 +392,9 @@ export default {
     logout() {
       this.isConfirming = true;
       const ans = confirm("Bạn có chắc chắn muốn thoát không?");
-      setTimeout(() => { this.isConfirming = false; }, 500);
+      setTimeout(() => {
+        this.isConfirming = false;
+      }, 500);
 
       if (ans) {
         this.$emit("logout");
@@ -412,7 +439,9 @@ export default {
     async finishQuiz() {
       this.isConfirming = true;
       const ans = confirm("Bạn có chắc chắn hoàn thành bài thi không?");
-      setTimeout(() => { this.isConfirming = false; }, 500);
+      setTimeout(() => {
+        this.isConfirming = false;
+      }, 500);
 
       if (ans) {
         this.score = this.answers.filter(
@@ -424,7 +453,10 @@ export default {
 
         this.isloading = true;
 
-        // CHỈ GỌI 1 HÀM DUY NHẤT LƯU CẢ ĐÁP ÁN VÀ ĐIỂM
+        // 1. Cập nhật User (Điểm số)
+        await this.updateUserInfo();
+
+        // 2. Lưu Submission (Đáp án chi tiết)
         const isSavedSuccessfully = await this.saveSubmission();
 
         this.isloading = false;
@@ -449,7 +481,7 @@ export default {
       if (!payload) {
         const userId = this.getUserId();
         if (!userId) return false;
-        
+
         const submissionAnswers = this.questions.map((q, i) => {
           const userAnswer = this.answers[i];
           const userChoice =
@@ -463,14 +495,13 @@ export default {
           };
         });
 
-        // Gom tất cả vào 1 payload để Backend lo toàn bộ (Submission + cập nhật User)
         payload = {
           user_id: String(userId),
           diem: this.score,
           thoigianlambai: this.elapsedTime,
           answers: submissionAnswers,
         };
-        
+
         if (this.enableAntiCheat) {
           payload.solanvipham = this.cheatCount;
         }
@@ -480,7 +511,6 @@ export default {
         await createSubmission(payload);
         return true;
       } catch (err) {
-        // Rớt mạng hoặc Server quá tải (502) -> Chuyển vào LocalStorage
         localStorage.setItem("offline_submission", JSON.stringify(payload));
         if (this.user) {
           const userName =
@@ -497,9 +527,26 @@ export default {
         try {
           this.isloading = true;
           const payload = JSON.parse(offlineData);
-          
+
           const success = await this.saveSubmission(payload);
           if (success) {
+            // Nếu có mạng lại, phải cập nhật luôn điểm user bị lỗi chưa PUT được
+            try {
+              const userId = payload.user_id || this.getUserId();
+              if (userId) {
+                const updateObj = {
+                  traloidung: payload.diem,
+                  thoigianlambai: payload.thoigianlambai,
+                };
+                if (payload.solanvipham !== undefined) {
+                  updateObj.solanvipham = payload.solanvipham;
+                }
+                await updateUser(String(userId), updateObj);
+              }
+            } catch (e) {
+              console.error("Lỗi đồng bộ thông tin User Offline");
+            }
+
             localStorage.removeItem("offline_submission");
             localStorage.removeItem("offline_user_name");
             this.isOfflineError = false;
@@ -537,7 +584,7 @@ export default {
               dapan_dung: String(q.traloi[q.dapan] || ""),
             };
           });
-          
+
           const payload = {
             user_id: String(userId),
             diem: this.score,
@@ -550,10 +597,15 @@ export default {
 
           localStorage.setItem("offline_submission", JSON.stringify(payload));
 
-          // Vẫn gọi updateUser chỗ reload này để kịp ghi nhận nếu user ép F5 tắt máy luôn
+          // Gửi một request PUT cập nhật thông tin user ngay lập tức trước khi tắt
+          const updateData = {
+            traloidung: this.score,
+            thoigianlambai: this.elapsedTime,
+          };
           if (this.enableAntiCheat) {
-            updateUser(String(userId), { solanvipham: this.cheatCount }).catch(() => {});
+            updateData.solanvipham = this.cheatCount;
           }
+          updateUser(String(userId), updateData).catch(() => {});
 
           if (this.user) {
             const userName =
@@ -578,7 +630,7 @@ export default {
     document.addEventListener("copy", this.preventCopyContext);
     document.addEventListener("cut", this.preventCopyContext);
     document.addEventListener("paste", this.preventCopyContext);
-    document.addEventListener("keyup", this.handleKeyUp); 
+    document.addEventListener("keyup", this.handleKeyUp);
 
     if (!this.isOnline) {
       this.$emit("pause-timer");
@@ -590,14 +642,17 @@ export default {
     window.removeEventListener("online", this.updateOnlineStatus);
     window.removeEventListener("offline", this.updateOnlineStatus);
 
-    document.removeEventListener("visibilitychange", this.handleVisibilityChange);
+    document.removeEventListener(
+      "visibilitychange",
+      this.handleVisibilityChange,
+    );
     window.removeEventListener("blur", this.handleWindowBlur);
     document.removeEventListener("keydown", this.handleKeyboardShortcuts);
     document.removeEventListener("contextmenu", this.preventCopyContext);
     document.removeEventListener("copy", this.preventCopyContext);
     document.removeEventListener("cut", this.preventCopyContext);
     document.removeEventListener("paste", this.preventCopyContext);
-    document.removeEventListener("keyup", this.handleKeyUp); 
+    document.removeEventListener("keyup", this.handleKeyUp);
   },
 };
 </script>
