@@ -127,7 +127,6 @@ export default {
   props: {
     timeValue: Number,
     user: Object,
-    // Prop MỚI: Bật tắt chế độ chống gian lận (mặc định là bật)
     enableAntiCheat: {
       type: Boolean,
       default: true,
@@ -153,8 +152,8 @@ export default {
       showCheatWarning: false,
       cheatMessage: "",
       forceSubmitted: false,
-      cheatHistory: [], // Lưu chi tiết nội dung các lần gian lận
-      isConfirming: false, // Báo hiệu đang mở hộp thoại confirm (tránh bắt nhầm gian lận)
+      cheatHistory: [],
+      isConfirming: false,
     };
   },
   computed: {
@@ -164,15 +163,13 @@ export default {
   },
   methods: {
     /* ==== 🚨 HỆ THỐNG CHỐNG GIAN LẬN 🚨 ==== */
-
-    // Gộp lịch sử gian lận thành 1 chuỗi gọn gàng
     getCheatSummary() {
       if (this.cheatCount === 0 || !this.enableAntiCheat) return "";
-      // Dùng Set để lọc trùng lặp nếu vi phạm cùng 1 lỗi nhiều lần
       const uniqueReasons = [...new Set(this.cheatHistory)];
       return ` (Gian lận ${this.cheatCount} lần: ${uniqueReasons.join(" | ")})`;
     },
 
+    // Lưu realtime số lần vi phạm để đề phòng tải lại trang
     async saveCheatCountToDB() {
       const userId = this.getUserId();
       if (!userId || !this.enableAntiCheat) return;
@@ -184,15 +181,12 @@ export default {
     },
 
     async triggerCheatAction(reason) {
-      // Nếu TẮT chế độ chống gian lận thì không làm gì cả
       if (!this.enableAntiCheat) return;
-
-      // Bỏ qua nếu đã thi xong, đang hiện cảnh báo, HOẶC ĐANG MỞ CONFIRM
       if (this.finished || this.showCheatWarning || this.isConfirming) return;
 
       this.cheatCount++;
       this.cheatMessage = reason;
-      this.cheatHistory.push(reason); // Lưu nội dung vi phạm
+      this.cheatHistory.push(reason);
 
       this.saveCheatCountToDB();
 
@@ -223,27 +217,18 @@ export default {
 
     handleWindowBlur() {
       if (!this.enableAntiCheat || this.finished || this.isConfirming) return;
-
-      // Thêm setTimeout (khoảng 500ms - 1s) để tạo thời gian châm chước (grace period)
-      // Điều này giúp tránh bắt nhầm khi có popup hệ thống nhá lên rồi tắt,
-      // hoặc tránh đụng độ với sự kiện visibilitychange khi chuyển tab.
       setTimeout(() => {
-        // Chỉ ghi nhận gian lận nếu:
-        // 1. Không phải hành động chuyển tab (document.hidden = false)
-        // 2. Và cửa sổ trình duyệt THỰC SỰ đã mất tiêu điểm (document.hasFocus() = false)
         if (!document.hidden && !document.hasFocus()) {
           this.triggerCheatAction(
             "Hành vi đáng ngờ: Bấm chuột ra ngoài vùng thi hoặc mở ứng dụng khác",
           );
         }
-      }, 1000); // 700 mili-giây là khoảng thời gian hợp lý để lọc các lỗi bắt nhầm
+      }, 1000);
     },
 
-    // Giữ nguyên hàm cũ, xóa phần kiểm tra PrintScreen ở đây
     handleKeyboardShortcuts(e) {
       if (!this.enableAntiCheat || this.finished || this.isConfirming) return;
 
-      // Chống chụp màn hình trên Mac (Cmd + Shift + 3/4/5)
       if (
         e.metaKey &&
         e.shiftKey &&
@@ -254,7 +239,6 @@ export default {
         this.clearClipboard();
       }
 
-      // Chống mở DevTools
       if (
         e.key === "F12" ||
         (e.ctrlKey &&
@@ -269,7 +253,6 @@ export default {
       }
     },
 
-    // Hàm MỚI: Bắt sự kiện nhả phím (dành riêng cho PrintScreen)
     handleKeyUp(e) {
       if (!this.enableAntiCheat || this.finished || this.isConfirming) return;
 
@@ -282,17 +265,18 @@ export default {
       }
     },
 
-    // Cải tiến hàm clearClipboard: Đảm bảo xóa được ảnh vừa chụp
+    preventCopyContext(e) {
+      if (!this.enableAntiCheat || this.finished) return;
+      e.preventDefault();
+    },
+
     async clearClipboard() {
       if (!this.enableAntiCheat || this.finished) return;
       const warningText =
         "Hành vi chụp ảnh màn hình bài thi là vi phạm nội quy!";
-
       try {
-        // Cách 1: Dùng Clipboard API hiện đại
         await navigator.clipboard.writeText(warningText);
       } catch (err) {
-        // Cách 2: Fallback (dự phòng) bằng cách tạo input ẩn nếu API trên bị trình duyệt chặn
         const input = document.createElement("input");
         input.setAttribute("value", warningText);
         document.body.appendChild(input);
@@ -300,18 +284,6 @@ export default {
         document.execCommand("copy");
         document.body.removeChild(input);
       }
-    },
-
-    preventCopyContext(e) {
-      if (!this.enableAntiCheat || this.finished) return;
-      e.preventDefault();
-    },
-
-    clearClipboard() {
-      if (!this.enableAntiCheat || this.finished) return;
-      try {
-        navigator.clipboard.writeText("Gian lận không được phép!");
-      } catch (err) {}
     },
 
     /* ==== ⚙️ LOGIC CHÍNH BÀI THI & ĐỒNG BỘ MẠNG ⚙️ ==== */
@@ -322,17 +294,16 @@ export default {
         (ans, i) => ans === this.questions[i]?.dapan,
       ).length;
 
-      // Ghép lịch sử gian lận vào sau thời gian làm bài
       this.elapsedTime =
         this.formatElapsedTime(this.timeValue) +
         " [NỘP DO VI PHẠM]" +
         this.getCheatSummary();
 
       this.isloading = true;
-      try {
-        await this.updateUserInfo();
-      } catch (e) {}
+
+      // CHỈ GỌI 1 HÀM DUY NHẤT
       const isSavedSuccessfully = await this.saveSubmission();
+
       this.isloading = false;
       this.finished = true;
 
@@ -398,7 +369,6 @@ export default {
     logout() {
       this.isConfirming = true;
       const ans = confirm("Bạn có chắc chắn muốn thoát không?");
-
       setTimeout(() => {
         this.isConfirming = false;
       }, 500);
@@ -420,7 +390,6 @@ export default {
         this.isOfflineError = false;
         this.score = 0;
 
-        // Reset các biến chống gian lận
         this.cheatCount = 0;
         this.forceSubmitted = false;
         this.isConfirming = false;
@@ -446,9 +415,7 @@ export default {
 
     async finishQuiz() {
       this.isConfirming = true;
-
       const ans = confirm("Bạn có chắc chắn hoàn thành bài thi không?");
-
       setTimeout(() => {
         this.isConfirming = false;
       }, 500);
@@ -458,15 +425,12 @@ export default {
           (ans, i) => ans === this.questions[i]?.dapan,
         ).length;
 
-        // Ghép lịch sử gian lận vào sau thời gian làm bài
         this.elapsedTime =
           this.formatElapsedTime(this.timeValue) + this.getCheatSummary();
 
         this.isloading = true;
 
-        try {
-          await this.updateUserInfo();
-        } catch (e) {}
+        // CHỈ GỌI 1 HÀM DUY NHẤT LƯU CẢ ĐÁP ÁN VÀ ĐIỂM
         const isSavedSuccessfully = await this.saveSubmission();
 
         this.isloading = false;
@@ -486,28 +450,12 @@ export default {
       }
     },
 
-    async updateUserInfo() {
-      const userId = this.getUserId();
-      if (!userId) return;
-
-      const obj = {
-        thoigianlambai: this.elapsedTime,
-        traloidung: this.score,
-      };
-
-      // Chỉ cập nhật biến solanvipham nếu chế độ chống gian lận ĐANG BẬT
-      if (this.enableAntiCheat) {
-        obj.solanvipham = this.cheatCount;
-      }
-
-      await updateUser(String(userId), obj);
-    },
-
     async saveSubmission(syncPayload = null) {
       let payload = syncPayload;
       if (!payload) {
         const userId = this.getUserId();
         if (!userId) return false;
+
         const submissionAnswers = this.questions.map((q, i) => {
           const userAnswer = this.answers[i];
           const userChoice =
@@ -520,18 +468,25 @@ export default {
             dapan_dung: String(q.traloi[q.dapan] || ""),
           };
         });
+
+        // Gom tất cả vào 1 payload để Backend lo toàn bộ (Submission + cập nhật User)
         payload = {
           user_id: String(userId),
           diem: this.score,
           thoigianlambai: this.elapsedTime,
           answers: submissionAnswers,
         };
+
+        if (this.enableAntiCheat) {
+          payload.solanvipham = this.cheatCount;
+        }
       }
 
       try {
         await createSubmission(payload);
         return true;
       } catch (err) {
+        // Rớt mạng hoặc Server quá tải (502) -> Chuyển vào LocalStorage
         localStorage.setItem("offline_submission", JSON.stringify(payload));
         if (this.user) {
           const userName =
@@ -548,26 +503,12 @@ export default {
         try {
           this.isloading = true;
           const payload = JSON.parse(offlineData);
+
           const success = await this.saveSubmission(payload);
           if (success) {
             localStorage.removeItem("offline_submission");
+            localStorage.removeItem("offline_user_name");
             this.isOfflineError = false;
-
-            const userId = payload.user_id || this.getUserId();
-            const savedName =
-              localStorage.getItem("offline_user_name") ||
-              (this.user ? this.user.hoten || this.user.name : "");
-            if (userId && savedName) {
-              const obj = {
-                thoigianlambai: payload.thoigianlambai,
-                traloidung: payload.diem,
-                hoten: savedName + " - Lỗi mạng",
-              };
-              try {
-                await updateUser(String(userId), obj);
-                localStorage.removeItem("offline_user_name");
-              } catch (e) {}
-            }
             alert("✅ ĐÃ ĐỒNG BỘ THÀNH CÔNG BÀI THI LÊN HỆ THỐNG");
           }
         } catch (error) {
@@ -583,7 +524,6 @@ export default {
           (ans, i) => ans === this.questions[i]?.dapan,
         ).length;
 
-        // Ghép lịch sử gian lận vào sau thời gian làm bài
         this.elapsedTime =
           this.formatElapsedTime(this.timeValue) +
           ` [RELOAD]` +
@@ -603,15 +543,20 @@ export default {
               dapan_dung: String(q.traloi[q.dapan] || ""),
             };
           });
+
           const payload = {
             user_id: String(userId),
             diem: this.score,
             thoigianlambai: this.elapsedTime,
             answers: submissionAnswers,
           };
+          if (this.enableAntiCheat) {
+            payload.solanvipham = this.cheatCount;
+          }
 
           localStorage.setItem("offline_submission", JSON.stringify(payload));
 
+          // Vẫn gọi updateUser chỗ reload này để kịp ghi nhận nếu user ép F5 tắt máy luôn
           if (this.enableAntiCheat) {
             updateUser(String(userId), { solanvipham: this.cheatCount }).catch(
               () => {},
@@ -641,7 +586,7 @@ export default {
     document.addEventListener("copy", this.preventCopyContext);
     document.addEventListener("cut", this.preventCopyContext);
     document.addEventListener("paste", this.preventCopyContext);
-    document.addEventListener("keyup", this.handleKeyUp); // THÊM DÒNG NÀY
+    document.addEventListener("keyup", this.handleKeyUp);
 
     if (!this.isOnline) {
       this.$emit("pause-timer");
@@ -663,7 +608,7 @@ export default {
     document.removeEventListener("copy", this.preventCopyContext);
     document.removeEventListener("cut", this.preventCopyContext);
     document.removeEventListener("paste", this.preventCopyContext);
-    document.removeEventListener("keyup", this.handleKeyUp); // THÊM DÒNG NÀY
+    document.removeEventListener("keyup", this.handleKeyUp);
   },
 };
 </script>

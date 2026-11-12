@@ -47,8 +47,8 @@
       * Lưu ý: Mỗi công chức, người lao động chỉ được phép tham gia thi một lần
       duy nhất. "Điểm số lấy dựa trên kết quả thi lần đầu".
     </p>
-    <!-- <button class="btn-submit" @click="submit">Vào thi</button> -->
-    <H4>Hệ thống tạm khóa</H4>
+    <button class="btn-submit" @click="submit">Vào thi</button>
+    <!-- <H4>Hệ thống tạm khóa</H4> -->
     <p v-if="error" class="error">{{ error }}</p>
   </div>
 
