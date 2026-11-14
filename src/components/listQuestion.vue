@@ -26,6 +26,18 @@
     </div>
   </div>
 
+  <!-- 🛑 MODAL XÁC NHẬN NỘP BÀI 🛑 -->
+  <div v-if="showConfirmModal" class="overlay-blocker modal-bg">
+    <div class="alert-box confirm-box">
+      <h2>❓ Xác nhận nộp bài</h2>
+      <p>Bạn có chắc chắn muốn hoàn thành và nộp bài thi không?</p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" @click="cancelFinish">Hủy</button>
+        <button class="btn btn-primary" @click="confirmFinish">Đồng ý</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 📝 KHU VỰC THI -->
   <div class="quiz-container no-copy" v-if="!finished && questions.length">
     <h2>Câu hỏi {{ currentIndex + 1 }}/{{ questions.length }}</h2>
@@ -66,16 +78,21 @@
     </div>
 
     <div class="controls">
-      <button @click="prevQuestion" :disabled="currentIndex === 0">
+      <button
+        @click="prevQuestion"
+        :disabled="currentIndex === 0 || isSubmitting"
+      >
         ⬅ Trước
       </button>
       <button
         @click="nextQuestion"
-        :disabled="currentIndex === questions.length - 1"
+        :disabled="currentIndex === questions.length - 1 || isSubmitting"
       >
         Tiếp ➡
       </button>
-      <button @click="finishQuiz" class="btn-finish">✅ Hoàn thành</button>
+      <button @click="finishQuiz" class="btn-finish" :disabled="isSubmitting">
+        ✅ {{ isSubmitting ? "Đang nộp..." : "Hoàn thành" }}
+      </button>
     </div>
   </div>
 
@@ -95,7 +112,7 @@
 
     <div v-if="isOfflineError" class="offline-warning">
       <h3>⚠️ BÀI THI CHƯA ĐƯỢC ĐẨY LÊN HỆ THỐNG!</h3>
-      <p>DO GẶP SỰ CỐ INTERNET</p>
+      <p>DO GẶP SỰ CỐ KẾT NỐI API</p>
       <p><b>KHÔNG TẮT MÁY HAY TẮT TRÌNH DUYỆT.</b></p>
       <p>
         Vui lòng gọi ngay cho <b>bộ phận CNTT</b> để được hỗ trợ đồng bộ kết
@@ -139,6 +156,7 @@ export default {
       isOnline: navigator.onLine,
       finished: false,
       isloading: false,
+      isSubmitting: false,
       isOfflineError: false,
       questions: [],
       currentIndex: 0,
@@ -146,7 +164,7 @@ export default {
       score: 0,
       elapsedTime: "",
 
-      // Biến chống gian lận
+      // Biến chống gian lận & UI
       cheatCount: 0,
       maxCheats: 5,
       showCheatWarning: false,
@@ -154,6 +172,9 @@ export default {
       forceSubmitted: false,
       cheatHistory: [],
       isConfirming: false,
+
+      // Biến bật tắt Modal xác nhận nộp bài
+      showConfirmModal: false,
     };
   },
   computed: {
@@ -163,6 +184,7 @@ export default {
   },
   methods: {
     /* ==== 🚨 HỆ THỐNG CHỐNG GIAN LẬN 🚨 ==== */
+    // ... (Giữ nguyên các hàm Anti-Cheat cũ)
     getCheatSummary() {
       if (this.cheatCount === 0 || !this.enableAntiCheat) return "";
       const uniqueReasons = [...new Set(this.cheatHistory)];
@@ -181,7 +203,13 @@ export default {
 
     async triggerCheatAction(reason) {
       if (!this.enableAntiCheat) return;
-      if (this.finished || this.showCheatWarning || this.isConfirming) return;
+      if (
+        this.finished ||
+        this.showCheatWarning ||
+        this.isConfirming ||
+        this.isSubmitting
+      )
+        return;
 
       this.cheatCount++;
       this.cheatMessage = reason;
@@ -206,7 +234,13 @@ export default {
     },
 
     handleVisibilityChange() {
-      if (!this.enableAntiCheat || this.finished || this.isConfirming) return;
+      if (
+        !this.enableAntiCheat ||
+        this.finished ||
+        this.isConfirming ||
+        this.isSubmitting
+      )
+        return;
       if (document.hidden) {
         this.triggerCheatAction(
           "Bạn vừa chuyển tab, thu nhỏ trình duyệt hoặc mở ứng dụng khác",
@@ -215,7 +249,13 @@ export default {
     },
 
     handleWindowBlur() {
-      if (!this.enableAntiCheat || this.finished || this.isConfirming) return;
+      if (
+        !this.enableAntiCheat ||
+        this.finished ||
+        this.isConfirming ||
+        this.isSubmitting
+      )
+        return;
       setTimeout(() => {
         if (!document.hidden && !document.hasFocus()) {
           this.triggerCheatAction(
@@ -226,7 +266,13 @@ export default {
     },
 
     handleKeyboardShortcuts(e) {
-      if (!this.enableAntiCheat || this.finished || this.isConfirming) return;
+      if (
+        !this.enableAntiCheat ||
+        this.finished ||
+        this.isConfirming ||
+        this.isSubmitting
+      )
+        return;
 
       if (
         e.metaKey &&
@@ -253,7 +299,13 @@ export default {
     },
 
     handleKeyUp(e) {
-      if (!this.enableAntiCheat || this.finished || this.isConfirming) return;
+      if (
+        !this.enableAntiCheat ||
+        this.finished ||
+        this.isConfirming ||
+        this.isSubmitting
+      )
+        return;
       if (e.key === "PrintScreen" || e.keyCode === 44) {
         e.preventDefault();
         this.triggerCheatAction(
@@ -286,57 +338,169 @@ export default {
 
     /* ==== ⚙️ LOGIC CHÍNH BÀI THI & ĐỒNG BỘ MẠNG ⚙️ ==== */
 
-    // HÀM MỚI: Gọi PUT API cập nhật user
-    async updateUserInfo() {
-      const userId = this.getUserId();
-      if (!userId) return;
-
-      const obj = {
-        thoigianlambai: this.elapsedTime,
-        traloidung: this.score,
-      };
-
-      if (this.enableAntiCheat) {
-        obj.solanvipham = this.cheatCount;
-      }
-
+    getUserId() {
+      let stored = localStorage.getItem("currentUserId");
+      if (!stored || stored === "undefined" || stored === "null") return null;
       try {
-        await updateUser(String(userId), obj);
+        return JSON.parse(stored);
       } catch (e) {
-        console.error("Lỗi cập nhật User Info:", e);
+        return stored;
       }
     },
 
-    async forceSubmitQuiz() {
-      this.forceSubmitted = true;
-      this.showCheatWarning = false;
+    formatElapsedTime(totalSeconds) {
+      const hrs = Math.floor(totalSeconds / 3600);
+      const mins = Math.floor((totalSeconds % 3600) / 60);
+      const secs = totalSeconds % 60;
+      return `${String(hrs).padStart(2, "0")}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    },
+
+    async executeSyncableSubmit(payload, isSyncing = false) {
+      try {
+        const updateObj = {
+          traloidung: payload.diem,
+          thoigianlambai: payload.thoigianlambai,
+        };
+        if (payload.solanvipham !== undefined) {
+          updateObj.solanvipham = payload.solanvipham;
+        }
+
+        await updateUser(payload.user_id, updateObj);
+        await createSubmission(payload);
+
+        if (isSyncing) {
+          localStorage.removeItem("offline_submission");
+          localStorage.removeItem("offline_user_name");
+        }
+        return true;
+      } catch (err) {
+        console.error("Lỗi đồng bộ/nộp bài:", err);
+        localStorage.setItem("offline_submission", JSON.stringify(payload));
+        if (this.user) {
+          const userName =
+            this.user.hoten || this.user.name || this.user.ten || "";
+          localStorage.setItem("offline_user_name", userName);
+        }
+        return false;
+      }
+    },
+
+    async processFinalSubmission(isForced = false) {
+      if (this.isSubmitting || this.finished) return;
+
+      this.isSubmitting = true;
+      this.isloading = true;
+
       this.score = this.answers.filter(
         (ans, i) => ans === this.questions[i]?.dapan,
       ).length;
 
-      this.elapsedTime =
-        this.formatElapsedTime(this.timeValue) +
-        " [NỘP DO VI PHẠM]" +
-        this.getCheatSummary();
+      let timeStr = this.formatElapsedTime(this.timeValue);
+      if (isForced) {
+        timeStr += " [NỘP DO VI PHẠM]";
+        this.forceSubmitted = true;
+        this.showCheatWarning = false;
+      }
+      timeStr += this.getCheatSummary();
+      this.elapsedTime = timeStr;
 
-      this.isloading = true;
+      const userId = this.getUserId();
+      if (!userId) {
+        this.isloading = false;
+        this.isSubmitting = false;
+        return;
+      }
 
-      // 1. Cập nhật User (Điểm số)
-      await this.updateUserInfo();
+      const submissionAnswers = this.questions.map((q, i) => {
+        const userAnswer = this.answers[i];
+        const userChoice =
+          userAnswer !== undefined && userAnswer !== null
+            ? q.traloi[userAnswer]
+            : "";
+        return {
+          cauhoi: String(q.cauhoi),
+          dapanchon: String(userChoice || ""),
+          dapan_dung: String(q.traloi[q.dapan] || ""),
+        };
+      });
 
-      // 2. Lưu Submission (Đáp án chi tiết)
-      const isSavedSuccessfully = await this.saveSubmission();
+      const payload = {
+        user_id: String(userId),
+        diem: this.score,
+        thoigianlambai: this.elapsedTime,
+        answers: submissionAnswers,
+      };
+
+      if (this.enableAntiCheat) {
+        payload.solanvipham = this.cheatCount;
+      }
+
+      const isSuccess = await this.executeSyncableSubmit(payload, false);
 
       this.isloading = false;
       this.finished = true;
+      this.isSubmitting = false;
 
-      if (isSavedSuccessfully) {
+      if (isSuccess) {
         this.$emit("finished", {
           elapsedTime: this.elapsedTime,
           score: this.score,
         });
       } else {
         this.isOfflineError = true;
+        if (!isForced) {
+          alert(
+            "⚠️ LỖI KẾT NỐI HỆ THỐNG!\nBài thi chưa được lưu trên server. Tuyệt đối không tắt trình duyệt và gọi CNTT.",
+          );
+        }
+      }
+    },
+
+    forceSubmitQuiz() {
+      this.processFinalSubmission(true);
+    },
+
+    /* ==== CÁC HÀM SỬ DỤNG CHO MODAL XÁC NHẬN ==== */
+    finishQuiz() {
+      if (this.isSubmitting) return;
+      this.isConfirming = true; // Bật cờ này để vô hiệu hóa anti-cheat Blur / VisibilityChange
+      this.showConfirmModal = true;
+    },
+
+    confirmFinish() {
+      this.showConfirmModal = false;
+      // Trì hoãn một chút việc tắt isConfirming để anti-cheat không bắt nhầm event click
+      setTimeout(() => {
+        this.isConfirming = false;
+      }, 500);
+      this.processFinalSubmission(false);
+    },
+
+    cancelFinish() {
+      this.showConfirmModal = false;
+      setTimeout(() => {
+        this.isConfirming = false;
+      }, 500);
+    },
+    /* =========================================== */
+
+    async syncOfflineData() {
+      const offlineData = localStorage.getItem("offline_submission");
+      if (offlineData && navigator.onLine) {
+        try {
+          this.isloading = true;
+          const payload = JSON.parse(offlineData);
+          const success = await this.executeSyncableSubmit(payload, true);
+
+          if (success) {
+            this.isOfflineError = false;
+            alert("✅ ĐÃ ĐỒNG BỘ THÀNH CÔNG BÀI THI LÊN HỆ THỐNG");
+          }
+        } catch (error) {
+          console.error("Lỗi giải mã JSON offline data:", error);
+        } finally {
+          this.isloading = false;
+        }
       }
     },
 
@@ -348,23 +512,6 @@ export default {
         this.syncOfflineData();
       } else {
         this.$emit("pause-timer");
-      }
-    },
-
-    formatElapsedTime(totalSeconds) {
-      const hrs = Math.floor(totalSeconds / 3600);
-      const mins = Math.floor((totalSeconds % 3600) / 60);
-      const secs = totalSeconds % 60;
-      return `${String(hrs).padStart(2, "0")}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-    },
-
-    getUserId() {
-      let stored = localStorage.getItem("currentUserId");
-      if (!stored || stored === "undefined" || stored === "null") return null;
-      try {
-        return JSON.parse(stored);
-      } catch (e) {
-        return stored;
       }
     },
 
@@ -411,7 +558,9 @@ export default {
         this.currentIndex = 0;
         this.finished = false;
         this.isOfflineError = false;
+        this.isSubmitting = false;
         this.score = 0;
+        this.showConfirmModal = false;
 
         this.cheatCount = 0;
         this.forceSubmitted = false;
@@ -434,129 +583,6 @@ export default {
     },
     prevQuestion() {
       if (this.currentIndex > 0) this.currentIndex--;
-    },
-
-    async finishQuiz() {
-      this.isConfirming = true;
-      const ans = confirm("Bạn có chắc chắn hoàn thành bài thi không?");
-      setTimeout(() => {
-        this.isConfirming = false;
-      }, 500);
-
-      if (ans) {
-        this.score = this.answers.filter(
-          (ans, i) => ans === this.questions[i]?.dapan,
-        ).length;
-
-        this.elapsedTime =
-          this.formatElapsedTime(this.timeValue) + this.getCheatSummary();
-
-        this.isloading = true;
-
-        // 1. Cập nhật User (Điểm số)
-        await this.updateUserInfo();
-
-        // 2. Lưu Submission (Đáp án chi tiết)
-        const isSavedSuccessfully = await this.saveSubmission();
-
-        this.isloading = false;
-        this.finished = true;
-
-        if (isSavedSuccessfully) {
-          this.$emit("finished", {
-            elapsedTime: this.elapsedTime,
-            score: this.score,
-          });
-        } else {
-          this.isOfflineError = true;
-          alert(
-            "⚠️ LỖI KẾT NỐI MẠNG!\nKết quả thi đã được lưu tạm. Tuyệt đối không tắt trình duyệt và gọi CNTT.",
-          );
-        }
-      }
-    },
-
-    async saveSubmission(syncPayload = null) {
-      let payload = syncPayload;
-      if (!payload) {
-        const userId = this.getUserId();
-        if (!userId) return false;
-
-        const submissionAnswers = this.questions.map((q, i) => {
-          const userAnswer = this.answers[i];
-          const userChoice =
-            userAnswer !== undefined && userAnswer !== null
-              ? q.traloi[userAnswer]
-              : "";
-          return {
-            cauhoi: String(q.cauhoi),
-            dapanchon: String(userChoice || ""),
-            dapan_dung: String(q.traloi[q.dapan] || ""),
-          };
-        });
-
-        payload = {
-          user_id: String(userId),
-          diem: this.score,
-          thoigianlambai: this.elapsedTime,
-          answers: submissionAnswers,
-        };
-
-        if (this.enableAntiCheat) {
-          payload.solanvipham = this.cheatCount;
-        }
-      }
-
-      try {
-        await createSubmission(payload);
-        return true;
-      } catch (err) {
-        localStorage.setItem("offline_submission", JSON.stringify(payload));
-        if (this.user) {
-          const userName =
-            this.user.hoten || this.user.name || this.user.ten || "";
-          localStorage.setItem("offline_user_name", userName);
-        }
-        return false;
-      }
-    },
-
-    async syncOfflineData() {
-      const offlineData = localStorage.getItem("offline_submission");
-      if (offlineData && navigator.onLine) {
-        try {
-          this.isloading = true;
-          const payload = JSON.parse(offlineData);
-
-          const success = await this.saveSubmission(payload);
-          if (success) {
-            // Nếu có mạng lại, phải cập nhật luôn điểm user bị lỗi chưa PUT được
-            try {
-              const userId = payload.user_id || this.getUserId();
-              if (userId) {
-                const updateObj = {
-                  traloidung: payload.diem,
-                  thoigianlambai: payload.thoigianlambai,
-                };
-                if (payload.solanvipham !== undefined) {
-                  updateObj.solanvipham = payload.solanvipham;
-                }
-                await updateUser(String(userId), updateObj);
-              }
-            } catch (e) {
-              console.error("Lỗi đồng bộ thông tin User Offline");
-            }
-
-            localStorage.removeItem("offline_submission");
-            localStorage.removeItem("offline_user_name");
-            this.isOfflineError = false;
-            alert("✅ ĐÃ ĐỒNG BỘ THÀNH CÔNG BÀI THI LÊN HỆ THỐNG");
-          }
-        } catch (error) {
-        } finally {
-          this.isloading = false;
-        }
-      }
     },
 
     handleBeforeUnload(event) {
@@ -591,13 +617,18 @@ export default {
             thoigianlambai: this.elapsedTime,
             answers: submissionAnswers,
           };
+
           if (this.enableAntiCheat) {
             payload.solanvipham = this.cheatCount;
           }
 
           localStorage.setItem("offline_submission", JSON.stringify(payload));
+          if (this.user) {
+            const userName =
+              this.user.hoten || this.user.name || this.user.ten || "";
+            localStorage.setItem("offline_user_name", userName);
+          }
 
-          // Gửi một request PUT cập nhật thông tin user ngay lập tức trước khi tắt
           const updateData = {
             traloidung: this.score,
             thoigianlambai: this.elapsedTime,
@@ -606,12 +637,6 @@ export default {
             updateData.solanvipham = this.cheatCount;
           }
           updateUser(String(userId), updateData).catch(() => {});
-
-          if (this.user) {
-            const userName =
-              this.user.hoten || this.user.name || this.user.ten || "";
-            localStorage.setItem("offline_user_name", userName);
-          }
         }
         event.preventDefault();
         event.returnValue = "";
@@ -659,7 +684,7 @@ export default {
 
 <style scoped>
 /* ========================================= */
-/* 🛑 LỚP PHỦ CHUNG CHO POPUP (MẠNG + CHEAT) */
+/* 🛑 LỚP PHỦ CHUNG CHO POPUP (MẠNG + CHEAT + MODAL) */
 /* ========================================= */
 .overlay-blocker {
   position: fixed;
@@ -680,6 +705,9 @@ export default {
 .cheat-bg {
   background-color: rgba(231, 76, 60, 0.85);
 }
+.modal-bg {
+  background-color: rgba(0, 0, 0, 0.6);
+}
 
 .alert-box {
   background: #fff;
@@ -694,27 +722,35 @@ export default {
   border: 3px solid #e74c3c;
   animation: pulse-border-red 1.5s infinite;
 }
-
 .cheat-bg .alert-box {
   border: 4px solid #c0392b;
+}
+.confirm-box {
+  border: none;
+  min-width: 300px;
 }
 
 .alert-box h2 {
   margin-top: 0;
   font-size: 24px;
 }
-
 .alert-box p {
   font-size: 16px;
   color: #333;
 }
-
 .warning-text {
   color: #c0392b !important;
   font-weight: bold;
   text-decoration: underline;
 }
 
+/* Các nút trong Modal */
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 25px;
+}
 .btn-primary {
   background-color: #3498db;
   color: white;
@@ -724,10 +760,22 @@ export default {
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
-  margin-top: 15px;
 }
 .btn-primary:hover {
   background-color: #2980b9;
+}
+.btn-secondary {
+  background-color: #95a5a6;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.btn-secondary:hover {
+  background-color: #7f8c8d;
 }
 
 /* ========================================= */
@@ -783,7 +831,7 @@ export default {
   cursor: pointer;
   font-weight: bold;
 }
-.controls button:hover {
+.controls button:hover:not(:disabled) {
   background: #e67e22;
 }
 .controls button:disabled {
@@ -793,7 +841,7 @@ export default {
 .btn-finish {
   background: #e67e22 !important;
 }
-.btn-finish:hover {
+.btn-finish:hover:not(:disabled) {
   background: #2ecc71 !important;
 }
 .result {

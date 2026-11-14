@@ -23,7 +23,7 @@ export async function fetchSubmission() {
 // Hàm POST - tạo submission mới
 export async function createSubmission(payload) {
   try {
-    console.log("📤 Gửi submission:", payload);
+    // console.log("📤 Gửi submission:", payload);
 
     const res = await axios.post(API_URL, payload, {
       headers: {
