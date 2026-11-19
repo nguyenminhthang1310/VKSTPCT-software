@@ -146,7 +146,7 @@ export default {
     user: Object,
     enableAntiCheat: {
       type: Boolean,
-      default: false,
+      default: false, //bật tắt gian lận
     },
   },
   components: { LoadingOverlay },
